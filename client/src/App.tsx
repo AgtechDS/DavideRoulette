@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard";
 import GameAutomation from "@/pages/GameAutomation";
 import StatisticsReports from "@/pages/StatisticsReports";
 import AIAnalysis from "@/pages/AIAnalysis";
+import Settings from "@/pages/Settings";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/automazione" component={GameAutomation} />
       <Route path="/statistiche" component={StatisticsReports} />
       <Route path="/ai" component={AIAnalysis} />
+      <Route path="/impostazioni" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );

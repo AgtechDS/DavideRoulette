@@ -444,6 +444,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ activeButtons });
   });
   
+  // ----- Settings Endpoints -----
+
+  // Get general settings
+  app.get("/api/settings/general", (req, res) => {
+    // In questo esempio restituiamo delle impostazioni predefinite
+    // In un'applicazione reale si recupererebbero dal database
+    res.json({
+      language: "it",
+      theme: "system",
+      notifications: true,
+      sounds: true,
+      autoSaveInterval: 5,
+      devMode: false,
+    });
+  });
+
+  // Save general settings
+  app.post("/api/settings/general", (req, res) => {
+    try {
+      // In un'applicazione reale salveremmo questi dati nel database
+      // Per ora restituiamo semplicemente i dati ricevuti
+      res.json(req.body);
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message: errorMessage });
+    }
+  });
+
+  // Get account settings
+  app.get("/api/settings/account", (req, res) => {
+    // In questo esempio restituiamo delle impostazioni predefinite
+    res.json({
+      username: "Dinquart84",
+      email: "user@example.com",
+      displayName: "Davide",
+      changePassword: false,
+    });
+  });
+
+  // Save account settings
+  app.post("/api/settings/account", (req, res) => {
+    try {
+      // In un'applicazione reale salveremmo questi dati nel database
+      res.json(req.body);
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message: errorMessage });
+    }
+  });
+
+  // Get bot settings
+  app.get("/api/settings/bot", (req, res) => {
+    // In questo esempio restituiamo delle impostazioni predefinite
+    res.json({
+      autoStartBot: false,
+      defaultStrategy: 1,
+      logLevel: "info",
+      screenshotFrequency: "errors",
+      maxSessionTime: 60,
+      enableEmergencyStop: true,
+      emergencyStopConditions: {
+        maxConsecutiveLosses: 8,
+        balanceThreshold: 50,
+      }
+    });
+  });
+
+  // Save bot settings
+  app.post("/api/settings/bot", (req, res) => {
+    try {
+      // In un'applicazione reale salveremmo questi dati nel database
+      res.json(req.body);
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message: errorMessage });
+    }
+  });
+
+  // Get casino settings
+  app.get("/api/settings/casino", (req, res) => {
+    // In questo esempio restituiamo delle impostazioni predefinite
+    res.json({
+      casinoUrl: "https://www.planetwin365.it",
+      credentials: {
+        saveCredentials: false,
+        username: "",
+        password: "",
+      },
+      gameType: "europeanRoulette",
+      preferredTable: "Roulette Live",
+    });
+  });
+
+  // Save casino settings
+  app.post("/api/settings/casino", (req, res) => {
+    try {
+      // In un'applicazione reale salveremmo questi dati nel database
+      res.json(req.body);
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message: errorMessage });
+    }
+  });
+
+  // Reset endpoint
+  app.post("/api/reset", (req, res) => {
+    try {
+      const { type } = req.body;
+      
+      // In un'applicazione reale eseguiremmo le operazioni di reset appropriate
+      switch (type) {
+        case "all":
+          // Reset completo
+          sikulixBot.clearLogs();
+          break;
+        case "statistics":
+          // Reset solo statistiche
+          break;
+        case "strategies":
+          // Reset solo strategie
+          break;
+        case "logs":
+          // Reset solo log
+          sikulixBot.clearLogs();
+          break;
+      }
+      
+      res.json({ success: true, message: `Reset ${type} completato con successo` });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ message: errorMessage });
+    }
+  });
+
   // Setup event listeners for button automation service
   buttonAutomationService.on('log', (log) => {
     sikulixBot.addLog(log.type, log.message);

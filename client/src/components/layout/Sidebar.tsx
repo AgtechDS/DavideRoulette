@@ -14,7 +14,7 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarPr
     { href: "/automazione", label: "Automazione Pulsanti", icon: "touch_app" },
     { href: "/statistiche", label: "Statistiche & Reports", icon: "bar_chart" },
     { href: "/ai", label: "AI Analysis", icon: "psychology" },
-    { href: "/settings", label: "Settings", icon: "settings" },
+    { href: "/impostazioni", label: "Impostazioni", icon: "settings" },
   ];
   
   const savedStrategies = [
