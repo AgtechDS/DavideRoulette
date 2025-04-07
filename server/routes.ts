@@ -113,28 +113,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----- Game Results Endpoints -----
-  
-  // Get game results with pagination
-  app.get("/api/results", (req, res) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 5;
-    
-    const results = storage.getGameResults(page, limit);
-    const total = storage.getGameResultsCount();
-    const totalPages = Math.ceil(total / limit);
-    
-    res.json({
-      results,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        startIndex: (page - 1) * limit + 1,
-        endIndex: Math.min(page * limit, total)
-      }
-    });
-  });
 
   // Export game results
   app.get("/api/results/export", (req, res) => {
@@ -246,6 +224,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/automations/buttons", (req, res) => {
     const buttons = buttonAutomationService.getButtonConfigs();
     res.json({ buttons });
+  });
+  
+  // ----- Reports Endpoints -----
+  
+  // Get all results (for reports)
+  app.get("/api/results", (req, res) => {
+    if (req.query.all === "true") {
+      const results = storage.getAllGameResults();
+      res.json({ results });
+      return;
+    }
+    
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
+    
+    const results = storage.getGameResults(page, limit);
+    const total = storage.getGameResultsCount();
+    const totalPages = Math.ceil(total / limit);
+    
+    res.json({
+      results,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        startIndex: (page - 1) * limit + 1,
+        endIndex: Math.min(page * limit, total)
+      }
+    });
+  });
+  
+  // Generate summary report (text response for demonstration)
+  app.get("/api/reports/summary", (req, res) => {
+    const results = storage.getAllGameResults();
+    const stats = storage.getStats();
+    const currentStrategy = storage.getCurrentStrategy();
+    
+    // Calculate summary data
+    const totalGames = results.length;
+    const wins = results.filter(r => r.outcome === 'Win').length;
+    const losses = results.filter(r => r.outcome === 'Loss').length;
+    const winRate = totalGames > 0 ? (wins / totalGames * 100).toFixed(2) : "0.00";
+    
+    // Format results as simple report text for demonstration
+    const report = `
+    DAVIDE ROULETTE - REPORT RIASSUNTIVO
+    -----------------------------------
+    
+    Generato il: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
+    
+    STATISTICHE GENERALI:
+    - Totale Round: ${totalGames}
+    - Vittorie: ${wins}
+    - Perdite: ${losses}
+    - Percentuale Vittoria: ${winRate}%
+    
+    STRATEGIA ATTUALE:
+    - Tipo: ${currentStrategy?.type || "N/A"}
+    - Puntata Iniziale: ${currentStrategy?.initialBet || "N/A"}
+    - Stop Loss: ${currentStrategy?.stopLoss || "N/A"}
+    
+    ANDAMENTO ULTIMA SESSIONE:
+    - Durata Sessione: ${stats?.activePeriod || "N/A"}
+    - Saldo Iniziale: ${stats?.startingBalance || "N/A"}
+    - Saldo Corrente: ${stats?.currentBalance || "N/A"}
+    
+    Questo report è stato generato automaticamente dal sistema Davide Roulette.
+    `;
+    
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Disposition', 'attachment; filename=roulette-summary-report.txt');
+    res.send(report);
+  });
+  
+  // Generate statistics report (text response for demonstration)
+  app.get("/api/reports/statistics", (req, res) => {
+    const results = storage.getAllGameResults();
+    const totalGames = results.length;
+    
+    // Calculate number frequencies
+    const numberFrequency: Record<number, number> = {};
+    results.forEach(result => {
+      numberFrequency[result.number] = (numberFrequency[result.number] || 0) + 1;
+    });
+    
+    // Sort numbers by frequency
+    const sortedNumbers = Object.entries(numberFrequency)
+      .sort((a, b) => Number(b[1]) - Number(a[1]))
+      .map(([number, count]) => `${number}: ${count} volte`);
+    
+    // Calculate color frequencies
+    const redCount = results.filter(r => r.color === 'Red').length;
+    const blackCount = results.filter(r => r.color === 'Black').length;
+    const greenCount = results.filter(r => r.color === 'Green').length;
+    
+    // Format report
+    const report = `
+    DAVIDE ROULETTE - REPORT STATISTICO DETTAGLIATO
+    ----------------------------------------------
+    
+    Generato il: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
+    
+    STATISTICHE NUMERI:
+    I numeri più frequenti (in ordine decrescente):
+    ${sortedNumbers.slice(0, 10).join('\n    ')}
+    
+    STATISTICHE COLORI:
+    - Rosso: ${redCount} (${totalGames > 0 ? (redCount / totalGames * 100).toFixed(2) : 0}%)
+    - Nero: ${blackCount} (${totalGames > 0 ? (blackCount / totalGames * 100).toFixed(2) : 0}%)
+    - Verde: ${greenCount} (${totalGames > 0 ? (greenCount / totalGames * 100).toFixed(2) : 0}%)
+    
+    SEQUENZE:
+    - Sequenza più lunga di rossi: ${calculateLongestSequence(results, (r: any) => r.color === 'Red')}
+    - Sequenza più lunga di neri: ${calculateLongestSequence(results, (r: any) => r.color === 'Black')}
+    - Sequenza più lunga di vittorie: ${calculateLongestSequence(results, (r: any) => r.outcome === 'Win')}
+    - Sequenza più lunga di perdite: ${calculateLongestSequence(results, (r: any) => r.outcome === 'Loss')}
+    
+    Questo report è stato generato automaticamente dal sistema Davide Roulette.
+    `;
+    
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Disposition', 'attachment; filename=roulette-statistics-report.txt');
+    res.send(report);
   });
 
   // Save a button configuration
@@ -361,6 +463,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   return httpServer;
+}
+
+// Helper function to calculate the longest sequence matching a condition
+function calculateLongestSequence(results: any[], predicate: (result: any) => boolean): number {
+  let longestSequence = 0;
+  let currentSequence = 0;
+  
+  for (const result of results) {
+    if (predicate(result)) {
+      currentSequence++;
+      longestSequence = Math.max(longestSequence, currentSequence);
+    } else {
+      currentSequence = 0;
+    }
+  }
+  
+  return longestSequence;
 }
 
 // Helper function to generate AI insights

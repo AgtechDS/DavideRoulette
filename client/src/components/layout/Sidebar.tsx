@@ -12,7 +12,7 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarPr
   const navItems = [
     { href: "/", label: "Dashboard", icon: "dashboard" },
     { href: "/automazione", label: "Automazione Pulsanti", icon: "touch_app" },
-    { href: "/statistics", label: "Statistics & Reports", icon: "bar_chart" },
+    { href: "/statistiche", label: "Statistiche & Reports", icon: "bar_chart" },
     { href: "/ai", label: "AI Analysis", icon: "psychology" },
     { href: "/settings", label: "Settings", icon: "settings" },
   ];
