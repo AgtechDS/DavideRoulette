@@ -6,6 +6,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { sikulixBot } from "./sikulix";
 import { botLogSchema, gameResultSchema, strategySchema } from "@shared/schema";
 import OpenAI from "openai";
+import { buttonAutomationService, ButtonConfig } from "./automationService";
 
 // Initialize OpenAI
 const openai = new OpenAI({ 
@@ -24,8 +25,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all strategies
-  app.get("/api/strategy", (req, res) => {
-    const strategies = storage.getStrategies();
+  app.get("/api/strategy", async (req, res) => {
+    const strategies = await storage.getStrategies();
     res.json({ strategies });
   });
 
@@ -237,6 +238,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     await storage.addGameResult(gameResult);
     await storage.updateSession(gameResult);
+  });
+
+  // ----- Button Automation Endpoints -----
+  
+  // Get all button configurations
+  app.get("/api/automations/buttons", (req, res) => {
+    const buttons = buttonAutomationService.getButtonConfigs();
+    res.json({ buttons });
+  });
+
+  // Save a button configuration
+  app.post("/api/automations/buttons", (req, res) => {
+    try {
+      const buttonConfig = req.body;
+      const savedConfig = buttonAutomationService.saveButtonConfig(buttonConfig);
+      res.json(savedConfig);
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message: errorMessage });
+    }
+  });
+
+  // Get a specific button configuration
+  app.get("/api/automations/buttons/:id", (req, res) => {
+    const { id } = req.params;
+    const buttonConfig = buttonAutomationService.getButtonConfig(id);
+    
+    if (!buttonConfig) {
+      res.status(404).json({ message: "Button configuration not found" });
+      return;
+    }
+    
+    res.json(buttonConfig);
+  });
+  
+  // Delete a button configuration
+  app.delete("/api/automations/buttons/:id", (req, res) => {
+    const { id } = req.params;
+    const success = buttonAutomationService.deleteButtonConfig(id);
+    
+    if (!success) {
+      res.status(404).json({ message: "Button configuration not found" });
+      return;
+    }
+    
+    res.json({ success: true, message: "Button configuration deleted successfully" });
+  });
+  
+  // Start button automation
+  app.post("/api/automations/buttons/:id/start", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const buttonConfig = buttonAutomationService.getButtonConfig(id);
+      
+      if (!buttonConfig) {
+        res.status(404).json({ message: "Button configuration not found" });
+        return;
+      }
+      
+      let strategy = null;
+      
+      // If the button is linked to a strategy, fetch it
+      if (buttonConfig.linkedToStrategy && buttonConfig.selectedStrategy) {
+        strategy = await storage.getStrategy(parseInt(buttonConfig.selectedStrategy));
+        
+        if (!strategy) {
+          res.status(404).json({ message: "Linked strategy not found" });
+          return;
+        }
+      }
+      
+      const success = buttonAutomationService.startButtonAutomation(id, strategy || undefined);
+      
+      if (!success) {
+        res.status(400).json({ message: "Failed to start button automation" });
+        return;
+      }
+      
+      res.json({ success: true, message: "Button automation started successfully" });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ message: errorMessage });
+    }
+  });
+  
+  // Stop button automation
+  app.post("/api/automations/buttons/:id/stop", (req, res) => {
+    const { id } = req.params;
+    const success = buttonAutomationService.stopButtonAutomation(id);
+    
+    if (!success) {
+      res.status(400).json({ message: "Failed to stop button automation" });
+      return;
+    }
+    
+    res.json({ success: true, message: "Button automation stopped successfully" });
+  });
+  
+  // Get active buttons
+  app.get("/api/automations/buttons/active", (req, res) => {
+    const activeButtons = buttonAutomationService.getActiveButtons();
+    res.json({ activeButtons });
+  });
+  
+  // Setup event listeners for button automation service
+  buttonAutomationService.on('log', (log) => {
+    sikulixBot.addLog(log.type, log.message);
+  });
+  
+  buttonAutomationService.on('result', (result) => {
+    if (result.outcome === 'win') {
+      const timestamp = new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      
+      sikulixBot.addLog('success', `Automazione pulsante: Risultato vincente dopo ${result.pressCount} pressioni!`);
+    }
   });
 
   return httpServer;

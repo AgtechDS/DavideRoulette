@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
+import GameAutomation from "@/pages/GameAutomation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 
@@ -24,6 +25,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
+      <Route path="/automazione" component={GameAutomation} />
       <Route component={NotFound} />
     </Switch>
   );

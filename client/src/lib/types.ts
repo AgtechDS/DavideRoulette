@@ -1,5 +1,6 @@
 // Strategy definition
 export interface Strategy {
+  id?: number;
   type: "martingala" | "fibonacci" | "dalembert" | "custom";
   initialBet: number;
   maxLosses: number;
@@ -7,6 +8,7 @@ export interface Strategy {
   targetProfit: number;
   stopLoss: number;
   sessionDuration: number;
+  createdAt?: string;
 }
 
 // Bot status
