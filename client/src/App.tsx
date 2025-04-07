@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import GameAutomation from "@/pages/GameAutomation";
 import StatisticsReports from "@/pages/StatisticsReports";
+import AIAnalysis from "@/pages/AIAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/automazione" component={GameAutomation} />
       <Route path="/statistiche" component={StatisticsReports} />
+      <Route path="/ai" component={AIAnalysis} />
       <Route component={NotFound} />
     </Switch>
   );
