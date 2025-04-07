@@ -272,7 +272,9 @@ export default function Settings() {
     queryFn: async () => {
       const res = await fetch("/api/strategy");
       if (!res.ok) throw new Error("Impossibile recuperare le strategie");
-      return res.json();
+      // La risposta API contiene una proprietà 'strategies' che è l'array che vogliamo
+      const data = await res.json();
+      return data.strategies || [];
     }
   });
 
@@ -1130,7 +1132,7 @@ export default function Settings() {
                                 <SelectContent>
                                   {strategiesData?.map((strategy: any) => (
                                     <SelectItem key={strategy.id} value={strategy.id.toString()}>
-                                      {strategy.name}
+                                      {strategy.type}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
