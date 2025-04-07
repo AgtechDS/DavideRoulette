@@ -48,10 +48,11 @@ class SikulixBot extends EventEmitter {
       });
       
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       this.running = false;
       this.strategy = null;
-      this.addLog('error', `Failed to start bot: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.addLog('error', `Failed to start bot: ${errorMessage}`);
       throw error;
     }
   }
@@ -81,8 +82,9 @@ class SikulixBot extends EventEmitter {
       
       this.addLog('info', 'Bot stopped successfully');
       return true;
-    } catch (error) {
-      this.addLog('error', `Error stopping bot: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.addLog('error', `Error stopping bot: ${errorMessage}`);
       throw error;
     }
   }
@@ -115,7 +117,7 @@ class SikulixBot extends EventEmitter {
   /**
    * Add a log entry
    */
-  private addLog(type: string, message: string): void {
+  addLog(type: string, message: string): void {
     const timestamp = new Date().toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
@@ -146,7 +148,14 @@ class SikulixBot extends EventEmitter {
 
       // Simulate bet placement
       const betAmount = this.calculateNextBet();
-      const betChoice = Math.random() > 0.5 ? 'Red' : 'Black';
+      let betChoice: string;
+      
+      if (this.strategy?.betType === 'color') {
+        betChoice = Math.random() > 0.5 ? 'Red' : 'Black';
+      } else {
+        // For evenOdd strategy
+        betChoice = Math.random() > 0.5 ? 'Even' : 'Odd';
+      }
       
       this.addLog('info', `Bot placed bet: €${betAmount.toFixed(2)} on ${betChoice}`);
 
@@ -173,6 +182,7 @@ class SikulixBot extends EventEmitter {
         if (this.strategy?.betType === 'color') {
           win = (betChoice === color);
         } else if (this.strategy?.betType === 'evenOdd') {
+          // For even/odd bets, we determine if bet was on even or odd from betChoice
           const betOnEven = betChoice === 'Even';
           win = (betOnEven === isEven) && number !== 0;
         }

@@ -35,8 +35,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = strategySchema.parse(req.body);
       const strategy = await storage.saveStrategy(validatedData);
       res.json(strategy);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message: errorMessage });
     }
   });
 
@@ -68,8 +69,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       storage.startNewSession();
       
       res.json({ success: true, message: "Bot started successfully" });
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message: errorMessage });
     }
   });
 
@@ -78,8 +80,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await sikulixBot.stop();
       res.json({ success: true, message: "Bot stopped successfully" });
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message: errorMessage });
     }
   });
 
@@ -186,8 +189,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.json(insights);
       }
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ message: errorMessage });
     }
   });
 
@@ -207,8 +211,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.saveAIInsights(insights);
       
       res.json({ success: true, message: "Analysis completed" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ message: errorMessage });
     }
   });
 
@@ -238,7 +243,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 }
 
 // Helper function to generate AI insights
-async function generateAIInsights(gameResults, currentStrategy) {
+async function generateAIInsights(
+  gameResults: Array<any>, 
+  currentStrategy: any
+): Promise<any> {
   try {
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
     const response = await openai.chat.completions.create({
@@ -246,20 +254,41 @@ async function generateAIInsights(gameResults, currentStrategy) {
       messages: [
         {
           role: "system",
-          content: "You are an AI assistant specialized in roulette strategy analysis. Analyze the provided game results and current strategy to provide insights. Return JSON with three fields: strategyAnalysis, riskAssessment, and trendDetection. Keep each insight under 100 words."
+          content: `You are an expert AI assistant specialized in roulette strategy analysis and optimization.
+Your task is to provide data-driven insights based on game results and the current betting strategy.
+You should think critically about the statistical patterns, success rates, and risk factors in roulette.
+
+For your analysis, consider:
+1. The mathematics behind the current strategy (Martingale, Fibonacci, D'Alembert, etc.)
+2. Statistical anomalies in the results (hot/cold numbers, color streaks)
+3. Risk to reward ratios 
+4. Bankroll management implications
+5. Progression of bets over time
+6. Sustainability of the strategy
+
+Return your analysis as a JSON object with these fields:
+- strategyAnalysis: A technical evaluation of the current strategy's effectiveness
+- riskAssessment: An evaluation of financial risk and potential loss scenarios
+- trendDetection: Identification of any meaningful patterns in the results
+- recommendedAdjustments: Specific recommendations to optimize the current strategy
+
+Keep each insight concise but comprehensive (under 100 words per section).`
         },
         {
           role: "user",
           content: JSON.stringify({
             gameResults: gameResults.slice(-50), // Last 50 results
-            currentStrategy
+            currentStrategy,
+            currentBankroll: 1000, // Assumed starting bankroll
+            sessionDuration: gameResults.length > 0 ? `${gameResults.length} rounds` : "New session"
           })
         }
       ],
       response_format: { type: "json_object" }
     });
 
-    const insights = JSON.parse(response.choices[0].message.content);
+    const content = response.choices[0]?.message?.content || "{}";
+    const insights = JSON.parse(content);
     
     return {
       ...insights,
@@ -270,9 +299,10 @@ async function generateAIInsights(gameResults, currentStrategy) {
     
     // Fallback insights if API fails
     return {
-      strategyAnalysis: "Unable to generate strategy analysis at this time.",
-      riskAssessment: "Risk assessment is currently unavailable.",
-      trendDetection: "Trend detection is currently unavailable.",
+      strategyAnalysis: "Unable to generate strategy analysis at this time. Please try again later.",
+      riskAssessment: "Risk assessment is currently unavailable. This could be due to API connectivity issues.",
+      trendDetection: "Trend detection is currently unavailable. Please ensure you have sufficient game history.",
+      recommendedAdjustments: "Strategy recommendations cannot be generated at this moment.",
       lastUpdated: new Date().toISOString()
     };
   }

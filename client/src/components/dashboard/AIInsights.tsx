@@ -5,11 +5,21 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+interface AIInsightData {
+  id?: number;
+  strategyAnalysis: string;
+  riskAssessment: string;
+  trendDetection: string;
+  recommendedAdjustments?: string;
+  lastUpdated?: string;
+  createdAt?: string;
+}
+
 export default function AIInsights() {
   const { toast } = useToast();
   
   // Fetch AI insights
-  const { data: insights, isLoading } = useQuery({
+  const { data: insights, isLoading } = useQuery<AIInsightData>({
     queryKey: ['/api/ai/insights'],
     refetchInterval: 60000 * 5, // Refresh every 5 minutes
   });
@@ -49,7 +59,14 @@ export default function AIInsights() {
   return (
     <Card className="border border-border">
       <CardHeader className="p-4 border-b border-border flex justify-between items-center">
-        <h2 className="font-medium">AI Insights</h2>
+        <div>
+          <h2 className="font-medium">AI Insights</h2>
+          {insights?.lastUpdated && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Updated: {new Date(insights.lastUpdated).toLocaleString()}
+            </p>
+          )}
+        </div>
         <Button 
           variant="ghost" 
           size="icon" 
@@ -88,13 +105,24 @@ export default function AIInsights() {
             </div>
             
             {/* Trend Detection */}
-            <div>
+            <div className="mb-4">
               <div className="flex items-center mb-2">
                 <span className="material-icons text-info mr-2">trending_up</span>
                 <h3 className="font-medium">Trend Detection</h3>
               </div>
               <p className="text-sm text-muted-foreground">{insights.trendDetection}</p>
             </div>
+            
+            {/* Recommended Adjustments */}
+            {insights.recommendedAdjustments && (
+              <div>
+                <div className="flex items-center mb-2">
+                  <span className="material-icons text-success mr-2">tune</span>
+                  <h3 className="font-medium">Recommended Adjustments</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">{insights.recommendedAdjustments}</p>
+              </div>
+            )}
           </>
         ) : (
           <div className="text-center py-6">

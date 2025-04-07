@@ -112,6 +112,8 @@ export const aiInsights = pgTable("ai_insights", {
   strategyAnalysis: text("strategy_analysis").notNull(),
   riskAssessment: text("risk_assessment").notNull(),
   trendDetection: text("trend_detection").notNull(),
+  recommendedAdjustments: text("recommended_adjustments"),
+  lastUpdated: text("last_updated"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -120,6 +122,8 @@ export const aiInsightSchema = z.object({
   strategyAnalysis: z.string(),
   riskAssessment: z.string(),
   trendDetection: z.string(),
+  recommendedAdjustments: z.string().optional(),
+  lastUpdated: z.string().optional(),
   createdAt: z.string().optional(),
 });
 
