@@ -1,0 +1,170 @@
+# Davide Roulette - Demo Operativa
+
+**Progetto:** Davide Roulette  
+**Obiettivo:** Creare una demo funzionante che dimostri l'automazione di giocate su casinò online (in modalità demo) e la capacità di impostare, monitorare e analizzare strategie di gioco tramite una dashboard interattiva.  
+**Modalità Iniziale:** Conto demo  
+**Modalità Futura:** Conto reale (prevista dopo test approfonditi e raccolta dati)
+
+---
+
+## Overview
+
+Il progetto Davide Roulette è un sistema modulare che integra:
+- **Dashboard Interattiva:** Dove l'utente imposta le strategie e visualizza dati e report statistici.
+- **Bot di Automazione:** Sfrutta **SikuliX** per interagire con il sito del casinò (gioco Java) tramite riconoscimento visivo.
+- **Modulo AI (GPT-4):** Per analizzare i dati delle giocate e fornire insight e suggerimenti per ottimizzare le strategie.
+
+---
+
+## Caratteristiche Principali
+
+1. **Dashboard Smart:**
+   - **Impostazione Strategie:** Inserisci regole (Martingala, Fibonacci, ecc.) e parametri (puntata iniziale, numero massimo di raddoppi, ecc.).
+   - **Monitoraggio in Tempo Reale:** Visualizza numero di giocate, importi puntati, vincite/perdite e andamento delle strategie.
+   - **Grafici & Report:** Analisi statistica e visualizzazione trend per aiutarti a decidere i prossimi step.
+
+2. **Bot Operativo con SikuliX:**
+   - **Navigazione Automatica:** Accede al sito del casinò, apre il gioco Java e interagisce con l’interfaccia tramite riconoscimento visivo.
+   - **Esecuzione Puntate:** Automatizza le puntate secondo le regole impostate nella dashboard.
+   - **Log Dettagliato:** Registra ogni azione e risultato per analisi successive.
+
+3. **Modulo AI (GPT-4):**
+   - **Analisi dei Dati:** Valuta le performance delle strategie e fornisce suggerimenti per eventuali ottimizzazioni.
+   - **Report Periodici:** Genera report e insight per supportare decisioni future.
+
+4. **Sicurezza & Compliance:**
+   - **Modalità Demo:** Inizialmente test su conto demo per garantire sicurezza e validità del sistema.
+   - **Disclaimers:** Chiare note legali per la gestione e il passaggio al conto reale.
+
+---
+
+## Tecnologie Utilizzate
+
+- **Frontend:**
+  - Framework: Next.js (o Vue.js, a seconda delle preferenze)
+  - Styling: Tailwind CSS
+
+- **Backend:**
+  - Ambiente: Node.js con Express
+  - Database: MongoDB per la gestione di log, strategie e dati delle giocate
+
+- **Automazione Web:**
+  - **SikuliX:** Per interagire con applicazioni Java tramite riconoscimento visivo
+  - Alternativa: Java Robot (in casi particolari per automazioni a basso livello)
+
+- **AI e Analisi:**
+  - Modello: GPT-4 via API per analisi dati e generazione report
+
+- **Deployment & Task Management:**
+  - Containerizzazione: Docker (opzionale)
+  - Task Runner: PM2 o cron job per gestire i cicli di esecuzione del bot
+
+---
+
+## Fasi del Progetto
+
+### Fase 1: Pianificazione e Raccolta Requisiti
+- **Definizione delle Funzionalità:** Incontro col cliente per raccogliere le specifiche e identificare le strategie da implementare.
+- **Analisi Tecnica:** Verifica dei requisiti del sito casinò (gioco Java) e scelta degli strumenti (SikuliX come principale per l’automazione).
+- **Documentazione:** Creazione di questo README.me e schede di specifica dettagliate (vedi sotto).
+
+### Fase 2: Sviluppo della Dashboard
+- **Prototipazione UI/UX:** Creazione di mockup e wireframe per l'interfaccia utente.
+- **Implementazione Frontend:** Sviluppo della dashboard per impostare strategie, visualizzare dati e generare report.
+- **Implementazione Backend:** Setup del server, API e database per gestire log, dati delle giocate e strategie.
+
+### Fase 3: Sviluppo del Bot di Automazione
+- **Script con SikuliX:** Realizzazione di script per:
+  - Navigare sul sito casinò
+  - Aprire il gioco Java
+  - Interagire con l’interfaccia del gioco (puntate, rilevamento risultati)
+- **Testing in Modalità Demo:** Debug e verifica operatività sul conto demo.
+
+### Fase 4: Integrazione e Test
+- **Collegamento dei Moduli:** Integrazione della dashboard, del bot e del modulo AI.
+- **Test End-to-End:** Verifica dell’intero flusso operativo in tempo reale, raccolta dati e analisi delle performance.
+
+### Fase 5: Demo e Feedback
+- **Presentazione della Demo:** Dimostrazione della soluzione funzionante al cliente.
+- **Raccolta Feedback:** Analisi dei feedback per eventuali ottimizzazioni o modifiche prima del passaggio al conto reale.
+
+### Fase 6: Migrazione al Conto Reale (Fase Futuro)
+- **Adeguamenti di Sicurezza:** Implementazione di controlli aggiuntivi e verifiche legali.
+- **Test Finale e Deployment:** Ultimazione del passaggio al conto reale con monitoraggio continuo.
+
+---
+
+## Schede di Specifica Dettagliate per la Demo
+
+### Scheda 1: Specifiche della Dashboard
+
+**Obiettivi:**
+- Permettere all'utente di impostare e modificare strategie di gioco.
+- Visualizzare dati in tempo reale e generare report statistici.
+
+**Funzionalità Richieste:**
+- **Input Strategie:**  
+  - Tipo di strategia (Martingala, Fibonacci, ecc.)
+  - Parametri personalizzabili (puntata iniziale, numero di raddoppi, limiti di perdita)
+- **Visualizzazione Dati:**  
+  - Numero di giocate, importi puntati, vincite e perdite
+  - Grafici dinamici per l'analisi delle performance
+- **Reportistica:**  
+  - Report periodici e alert in caso di determinati eventi (es. raggiungimento di limiti)
+
+**Design e UI:**
+- Layout pulito, intuitivo e responsive
+- Temi personalizzabili (dark/light)
+- Integrazione di notifiche (es. via email o Telegram)
+
+---
+
+### Scheda 2: Specifiche del Bot di Automazione
+
+**Obiettivi:**
+- Automatizzare il processo di navigazione e interazione con il sito casinò.
+- Aprire il gioco Java e piazzare puntate seguendo le regole impostate.
+
+**Funzionalità Richieste:**
+- **Navigazione:**  
+  - Login automatico e accesso alla sezione di gioco
+  - Apertura del gioco Java tramite riconoscimento visivo
+- **Interazione:**  
+  - Esecuzione delle puntate in base alle strategie definite
+  - Lettura dei risultati in tempo reale e registrazione dei dati
+- **Logging:**  
+  - Dettaglio di ogni operazione per successiva analisi e debugging
+
+**Tecnologia e Strumenti:**
+- **SikuliX:** Automatizza le interazioni basandosi su riconoscimento delle immagini
+- Eventuale utilizzo della **Java Robot class** per azioni specifiche a basso livello
+
+---
+
+### Scheda 3: Specifiche del Modulo AI
+
+**Obiettivi:**
+- Analizzare i dati delle giocate e generare report e suggerimenti.
+- Supportare l'ottimizzazione delle strategie in modo asincrono.
+
+**Funzionalità Richieste:**
+- **Analisi Dati:**  
+  - Raccolta e valutazione dei dati da dashboard e bot
+  - Generazione di report periodici
+- **Suggerimenti:**  
+  - Insight e consigli per ottimizzare le strategie (es. riduzione dei raddoppi in certi scenari)
+- **Reportistica:**  
+  - Output strutturato per l'utente (testuale e grafico)
+
+**Tecnologia:**
+- **GPT-4 API:** Interfacciamento per analisi e reportistica
+- Possibilità di espandere con modelli locali per predizioni avanzate
+
+---
+
+## Istruzioni per l'Installazione e Avvio della Demo
+
+1. **Clona il Repository:**
+   ```bash
+   git clone https://tuo-repository-url/davide-roulette.git
+   cd davide-roulette
