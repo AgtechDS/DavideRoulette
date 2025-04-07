@@ -1,287 +1,365 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import PageLayout from "@/components/layout/PageLayout";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { apiRequest } from "@/lib/queryClient";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { Strategy } from "@/lib/types";
+import { Play, Square, PlusCircle, Settings, SaveAll, Trash2, MousePointer, Timer, RotateCw, Target } from "lucide-react";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+
+interface ButtonConfig {
+  id: string;
+  name: string;
+  pressInterval: number;
+  pressCount: number;
+  targetArea: string;
+  coordinates: { x: number; y: number };
+  pressPattern: 'sequential' | 'random' | 'alternating';
+  waitBetweenPress: number;
+  stopOnWin: boolean;
+  linkedToStrategy: boolean;
+  selectedStrategy: string;
+  createdAt: string;
+}
 
 export default function GameAutomation() {
   const { toast } = useToast();
-  const [selectedButton, setSelectedButton] = useState<string | null>(null);
-  const [isConfiguring, setIsConfiguring] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  
-  // Button configuration form state
-  const [buttonConfig, setButtonConfig] = useState({
+  const [selectedButtonId, setSelectedButtonId] = useState<string | null>(null);
+  const [newConfig, setNewConfig] = useState<Partial<ButtonConfig>>({
     name: "",
-    pressInterval: 5,
-    pressCount: 10,
-    targetArea: "roulette-table",
+    pressInterval: 2000,
+    pressCount: 1,
+    targetArea: "center",
     coordinates: { x: 0, y: 0 },
     pressPattern: "sequential",
-    waitBetweenPress: 2,
-    stopOnWin: true,
+    waitBetweenPress: 500,
+    stopOnWin: false,
     linkedToStrategy: false,
     selectedStrategy: ""
   });
-  
-  // Get available strategies for linking
-  const { data: strategiesData } = useQuery<{strategies: Strategy[]}>({
-    queryKey: ['/api/strategy'],
-    select: (data) => {
-      // Ensure data.strategies is an array, otherwise default to empty array
-      return {
-        strategies: Array.isArray(data.strategies) ? data.strategies : []
-      };
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Fetch available button configurations
+  const { data: buttonConfigs, isLoading: configsLoading } = useQuery({
+    queryKey: ['/api/automation/buttons'],
+    queryFn: async () => {
+      const res = await fetch('/api/automation/buttons');
+      if (!res.ok) throw new Error('Failed to fetch button configurations');
+      return res.json();
     }
-  });
-  
-  // Get saved buttons
-  const { data: savedButtons, refetch: refetchButtons } = useQuery<{buttons: any[]}>({
-    queryKey: ['/api/automations/buttons'],
   });
 
-  // Save button configuration
-  const handleSaveButton = async () => {
-    try {
-      if (!buttonConfig.name) {
-        toast({
-          title: "Nome pulsante richiesto",
-          description: "Inserisci un nome per questo pulsante",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      await apiRequest('POST', '/api/automations/buttons', buttonConfig);
-      
+  // Fetch active buttons
+  const { data: activeButtons, isLoading: activeButtonsLoading, refetch: refetchActiveButtons } = useQuery({
+    queryKey: ['/api/automation/active'],
+    queryFn: async () => {
+      const res = await fetch('/api/automation/active');
+      if (!res.ok) throw new Error('Failed to fetch active buttons');
+      return res.json();
+    },
+    refetchInterval: 3000 // Poll every 3 seconds
+  });
+
+  // Fetch available strategies
+  const { data: strategies } = useQuery({
+    queryKey: ['/api/strategies'],
+    queryFn: async () => {
+      const res = await fetch('/api/strategies');
+      if (!res.ok) throw new Error('Failed to fetch strategies');
+      return res.json();
+    }
+  });
+
+  // Save button configuration mutation
+  const saveConfigMutation = useMutation({
+    mutationFn: async (config: Partial<ButtonConfig>) => {
+      const res = await apiRequest('POST', '/api/automation/buttons', config);
+      return res.json();
+    },
+    onSuccess: () => {
       toast({
-        title: "Configurazione Salvata",
-        description: "La configurazione del pulsante è stata salvata con successo",
+        title: "Configurazione salvata",
+        description: "La configurazione del pulsante è stata salvata con successo.",
       });
-      
-      setIsConfiguring(false);
-      refetchButtons();
-    } catch (error: any) {
+      setNewConfig({
+        name: "",
+        pressInterval: 2000,
+        pressCount: 1,
+        targetArea: "center",
+        coordinates: { x: 0, y: 0 },
+        pressPattern: "sequential",
+        waitBetweenPress: 500,
+        stopOnWin: false,
+        linkedToStrategy: false,
+        selectedStrategy: ""
+      });
+      setIsEditing(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/automation/buttons'] });
+    },
+    onError: (error: Error) => {
       toast({
         title: "Errore",
-        description: error.message || "Si è verificato un errore durante il salvataggio",
+        description: `Impossibile salvare la configurazione: ${error.message}`,
         variant: "destructive"
       });
     }
-  };
-  
-  // Start button automation
-  const handleStartAutomation = async (buttonId: string) => {
-    try {
-      await apiRequest('POST', `/api/automations/buttons/${buttonId}/start`, {});
-      
+  });
+
+  // Delete button configuration mutation
+  const deleteConfigMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest('DELETE', `/api/automation/buttons/${id}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
       toast({
-        title: "Automazione Avviata",
-        description: "L'automazione del pulsante è stata avviata con successo",
+        title: "Configurazione eliminata",
+        description: "La configurazione del pulsante è stata eliminata con successo.",
       });
-      
-      setSelectedButton(buttonId);
-    } catch (error: any) {
+      queryClient.invalidateQueries({ queryKey: ['/api/automation/buttons'] });
+    },
+    onError: (error: Error) => {
       toast({
         title: "Errore",
-        description: error.message || "Si è verificato un errore durante l'avvio",
+        description: `Impossibile eliminare la configurazione: ${error.message}`,
         variant: "destructive"
       });
     }
-  };
-  
-  // Stop button automation
-  const handleStopAutomation = async () => {
-    try {
-      if (!selectedButton) return;
-      
-      await apiRequest('POST', `/api/automations/buttons/${selectedButton}/stop`, {});
-      
+  });
+
+  // Start button automation mutation
+  const startButtonMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest('POST', `/api/automation/buttons/${id}/start`, {});
+      return res.json();
+    },
+    onSuccess: () => {
       toast({
-        title: "Automazione Fermata",
-        description: "L'automazione del pulsante è stata fermata con successo",
+        title: "Automazione avviata",
+        description: "L'automazione del pulsante è stata avviata con successo.",
       });
-      
-      setSelectedButton(null);
-    } catch (error: any) {
+      refetchActiveButtons();
+    },
+    onError: (error: Error) => {
       toast({
         title: "Errore",
-        description: error.message || "Si è verificato un errore durante l'arresto",
+        description: `Impossibile avviare l'automazione: ${error.message}`,
         variant: "destructive"
       });
     }
-  };
-  
-  // Delete button configuration
-  const handleDeleteButton = async (buttonId: string) => {
-    try {
-      await apiRequest('DELETE', `/api/automations/buttons/${buttonId}`, {});
-      
+  });
+
+  // Stop button automation mutation
+  const stopButtonMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest('POST', `/api/automation/buttons/${id}/stop`, {});
+      return res.json();
+    },
+    onSuccess: () => {
       toast({
-        title: "Configurazione Eliminata",
-        description: "La configurazione del pulsante è stata eliminata con successo",
+        title: "Automazione fermata",
+        description: "L'automazione del pulsante è stata fermata con successo.",
       });
-      
-      refetchButtons();
-    } catch (error: any) {
+      refetchActiveButtons();
+    },
+    onError: (error: Error) => {
       toast({
         title: "Errore",
-        description: error.message || "Si è verificato un errore durante l'eliminazione",
+        description: `Impossibile fermare l'automazione: ${error.message}`,
         variant: "destructive"
       });
     }
+  });
+
+  // Handle saving new configuration
+  const handleSaveConfig = () => {
+    if (!newConfig.name) {
+      toast({
+        title: "Errore",
+        description: "Il nome del pulsante è obbligatorio.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    saveConfigMutation.mutate(newConfig);
   };
-  
-  // Button to capture mouse position
-  const handleCapturePosition = () => {
-    toast({
-      title: "Funzione di Posizionamento",
-      description: "Per catturare la posizione esatta, utilizza lo strumento SikuliX di cattura schermo",
-    });
+
+  // Handle editing an existing configuration
+  const handleEditConfig = (config: ButtonConfig) => {
+    setNewConfig(config);
+    setIsEditing(true);
+    setSelectedButtonId(config.id);
   };
-  
-  // Update form values
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setButtonConfig({
-      ...buttonConfig,
-      [name]: value
-    });
+
+  // Check if a button is currently active
+  const isButtonActive = (id: string): boolean => {
+    return activeButtons?.includes(id) || false;
   };
-  
-  // Update select values
-  const handleSelectChange = (name: string, value: string) => {
-    setButtonConfig({
-      ...buttonConfig,
-      [name]: value
-    });
-  };
-  
-  // Update switch values
-  const handleSwitchChange = (name: string, checked: boolean) => {
-    setButtonConfig({
-      ...buttonConfig,
-      [name]: checked
-    });
-  };
-  
+
   return (
-    <div className="p-4 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Automazione Pulsanti di Gioco</h1>
+    <PageLayout>
+      <div className="container mx-auto p-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Automazione Pulsanti</h1>
+            <p className="text-muted-foreground">
+              Configura e gestisci automazioni personalizzate per i pulsanti di gioco
+            </p>
+          </div>
+        </div>
         
-        {!isConfiguring && (
-          <Button 
-            onClick={() => setIsConfiguring(true)}
-            className="bg-primary hover:bg-primary/90"
-          >
-            <span className="material-icons mr-2">add</span>
-            Nuovo Pulsante
-          </Button>
-        )}
-      </div>
-      
-      <p className="text-muted-foreground">
-        Configura e gestisci automazioni specifiche per pulsanti e interazioni all'interno del gioco.
-        Puoi impostare sequenze ripetute di clic, pattern di pressione, e collegarli alle tue strategie.
-      </p>
-      
-      {isConfiguring ? (
-        <Card className="border border-border mt-6">
-          <CardHeader className="bg-muted/50 p-4 border-b border-border">
-            <h2 className="font-medium">Configurazione Pulsante</h2>
-          </CardHeader>
+        <Tabs defaultValue="configured" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
+            <TabsTrigger value="configured">
+              <Settings className="mr-2 h-4 w-4" />
+              Pulsanti Configurati
+            </TabsTrigger>
+            <TabsTrigger value="new">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Nuovo Pulsante
+            </TabsTrigger>
+          </TabsList>
           
-          <CardContent className="p-4 space-y-6">
-            <Tabs defaultValue="basic">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="basic">Impostazioni Base</TabsTrigger>
-                <TabsTrigger value="advanced">Impostazioni Avanzate</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="basic" className="space-y-4 pt-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome del Pulsante</Label>
-                    <Input 
-                      id="name" 
-                      name="name" 
-                      placeholder="Es: Pulsante Gira"
-                      value={buttonConfig.name}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="targetArea">Area Target</Label>
-                    <Select 
-                      onValueChange={(value) => handleSelectChange("targetArea", value)}
-                      value={buttonConfig.targetArea}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleziona area" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="roulette-table">Tavolo Roulette</SelectItem>
-                        <SelectItem value="bet-panel">Pannello Scommesse</SelectItem>
-                        <SelectItem value="chips-area">Area Fiches</SelectItem>
-                        <SelectItem value="spin-button">Pulsante Gira</SelectItem>
-                        <SelectItem value="custom">Personalizzato</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="pressInterval">Intervallo di Pressione (secondi)</Label>
-                    <Input 
-                      id="pressInterval" 
-                      name="pressInterval"
-                      type="number" 
-                      value={buttonConfig.pressInterval}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="pressCount">Numero di Pressioni</Label>
-                    <Input 
-                      id="pressCount" 
-                      name="pressCount"
-                      type="number" 
-                      value={buttonConfig.pressCount}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 col-span-2">
-                    <Switch 
-                      id="stopOnWin"
-                      checked={buttonConfig.stopOnWin}
-                      onCheckedChange={(checked) => handleSwitchChange("stopOnWin", checked)}
-                    />
-                    <Label htmlFor="stopOnWin">Ferma Automazione in caso di Vincita</Label>
-                  </div>
+          <TabsContent value="configured">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {configsLoading ? (
+                <p>Caricamento configurazioni...</p>
+              ) : buttonConfigs?.length > 0 ? (
+                buttonConfigs.map((config: ButtonConfig) => (
+                  <Card key={config.id} className={isButtonActive(config.id) ? "border-primary" : ""}>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-lg flex items-center">
+                          <MousePointer className="mr-2 h-5 w-5" />
+                          {config.name}
+                        </CardTitle>
+                        {isButtonActive(config.id) && (
+                          <div className="px-2 py-1 rounded-full bg-primary/20 text-primary text-xs font-medium">
+                            Attivo
+                          </div>
+                        )}
+                      </div>
+                      <CardDescription>
+                        Pattern: {config.pressPattern === "sequential" ? "Sequenziale" : 
+                                  config.pressPattern === "random" ? "Casuale" : "Alternato"}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="flex items-center">
+                          <Timer className="mr-1 h-3 w-3 text-muted-foreground" />
+                          <span className="text-muted-foreground mr-1">Intervallo:</span>
+                          <span>{config.pressInterval} ms</span>
+                        </div>
+                        <div className="flex items-center">
+                          <RotateCw className="mr-1 h-3 w-3 text-muted-foreground" />
+                          <span className="text-muted-foreground mr-1">Conteggio:</span>
+                          <span>{config.pressCount}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Target className="mr-1 h-3 w-3 text-muted-foreground" />
+                          <span className="text-muted-foreground mr-1">Area:</span>
+                          <span>{config.targetArea}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-muted-foreground mr-1">Stop su vittoria:</span>
+                          <span>{config.stopOnWin ? "Sì" : "No"}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between pt-2">
+                      <div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditConfig(config)}
+                          className="mr-2"
+                        >
+                          <Settings className="h-4 w-4 mr-1" />
+                          Modifica
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => deleteConfigMutation.mutate(config.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Elimina
+                        </Button>
+                      </div>
+                      <div>
+                        {isButtonActive(config.id) ? (
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => stopButtonMutation.mutate(config.id)}
+                          >
+                            <Square className="h-4 w-4 mr-1" />
+                            Stop
+                          </Button>
+                        ) : (
+                          <Button 
+                            size="sm"
+                            onClick={() => startButtonMutation.mutate(config.id)}
+                          >
+                            <Play className="h-4 w-4 mr-1" />
+                            Avvia
+                          </Button>
+                        )}
+                      </div>
+                    </CardFooter>
+                  </Card>
+                ))
+              ) : (
+                <div className="col-span-full">
+                  <p className="text-muted-foreground text-center">
+                    Nessuna configurazione disponibile. Crea un nuovo pulsante per iniziare.
+                  </p>
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="advanced" className="space-y-4 pt-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="new">
+            <Card>
+              <CardHeader>
+                <CardTitle>{isEditing ? "Modifica Configurazione" : "Nuova Configurazione"}</CardTitle>
+                <CardDescription>
+                  {isEditing 
+                    ? "Modifica i dettagli della configurazione esistente" 
+                    : "Configura un nuovo pulsante automatico per il gioco"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="pressPattern">Pattern di Pressione</Label>
+                    <Label htmlFor="button-name">Nome del pulsante</Label>
+                    <Input 
+                      id="button-name" 
+                      placeholder="es. Pulsante Raddoppia" 
+                      value={newConfig.name}
+                      onChange={(e) => setNewConfig({...newConfig, name: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="press-pattern">Pattern di pressione</Label>
                     <Select 
-                      onValueChange={(value) => handleSelectChange("pressPattern", value)}
-                      value={buttonConfig.pressPattern}
+                      value={newConfig.pressPattern} 
+                      onValueChange={(value) => setNewConfig({
+                        ...newConfig, 
+                        pressPattern: value as 'sequential' | 'random' | 'alternating'
+                      })}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleziona pattern" />
+                      <SelectTrigger id="press-pattern">
+                        <SelectValue placeholder="Seleziona un pattern" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="sequential">Sequenziale</SelectItem>
@@ -292,242 +370,182 @@ export default function GameAutomation() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="waitBetweenPress">Attesa tra Pressioni (secondi)</Label>
-                    <Input 
-                      id="waitBetweenPress" 
-                      name="waitBetweenPress"
-                      type="number" 
-                      value={buttonConfig.waitBetweenPress}
-                      onChange={handleInputChange}
-                    />
+                    <Label htmlFor="target-area">Area target</Label>
+                    <Select 
+                      value={newConfig.targetArea} 
+                      onValueChange={(value) => setNewConfig({...newConfig, targetArea: value})}
+                    >
+                      <SelectTrigger id="target-area">
+                        <SelectValue placeholder="Seleziona un'area" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="center">Centro</SelectItem>
+                        <SelectItem value="roulette-red">Rosso Roulette</SelectItem>
+                        <SelectItem value="roulette-black">Nero Roulette</SelectItem>
+                        <SelectItem value="roulette-numbers">Numeri Roulette</SelectItem>
+                        <SelectItem value="bet-double">Pulsante Raddoppia</SelectItem>
+                        <SelectItem value="bet-spin">Pulsante Gira</SelectItem>
+                        <SelectItem value="custom">Personalizzato</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   
-                  <div className="space-y-2 col-span-2">
-                    <Label>Coordinate Personalizzate</Label>
-                    <div className="flex space-x-4">
-                      <div className="flex-1 space-y-2">
-                        <Label htmlFor="coordinateX">Coordinata X</Label>
+                  {newConfig.targetArea === "custom" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="coord-x">Coordinata X</Label>
                         <Input 
-                          id="coordinateX" 
-                          name="coordinateX"
+                          id="coord-x" 
                           type="number" 
-                          value={buttonConfig.coordinates.x}
-                          onChange={(e) => setButtonConfig({
-                            ...buttonConfig,
-                            coordinates: {
-                              ...buttonConfig.coordinates,
-                              x: parseInt(e.target.value)
+                          value={newConfig.coordinates?.x || 0}
+                          onChange={(e) => setNewConfig({
+                            ...newConfig, 
+                            coordinates: { 
+                              ...(newConfig.coordinates || { x: 0, y: 0 }), 
+                              x: parseInt(e.target.value) 
                             }
                           })}
                         />
                       </div>
-                      <div className="flex-1 space-y-2">
-                        <Label htmlFor="coordinateY">Coordinata Y</Label>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="coord-y">Coordinata Y</Label>
                         <Input 
-                          id="coordinateY" 
-                          name="coordinateY"
+                          id="coord-y" 
                           type="number" 
-                          value={buttonConfig.coordinates.y}
-                          onChange={(e) => setButtonConfig({
-                            ...buttonConfig,
-                            coordinates: {
-                              ...buttonConfig.coordinates,
-                              y: parseInt(e.target.value)
+                          value={newConfig.coordinates?.y || 0}
+                          onChange={(e) => setNewConfig({
+                            ...newConfig, 
+                            coordinates: { 
+                              ...(newConfig.coordinates || { x: 0, y: 0 }), 
+                              y: parseInt(e.target.value) 
                             }
                           })}
                         />
                       </div>
-                      <div className="flex items-end">
-                        <Button
-                          variant="outline"
-                          className="mb-[1px]"
-                          onClick={handleCapturePosition}
-                        >
-                          <span className="material-icons text-sm mr-1">crop_free</span>
-                          Cattura
-                        </Button>
-                      </div>
+                    </>
+                  )}
+                </div>
+                
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label htmlFor="press-interval">Intervallo di pressione (ms)</Label>
+                      <span className="text-sm text-muted-foreground">{newConfig.pressInterval} ms</span>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 col-span-2">
-                    <Switch 
-                      id="linkedToStrategy"
-                      checked={buttonConfig.linkedToStrategy}
-                      onCheckedChange={(checked) => handleSwitchChange("linkedToStrategy", checked)}
+                    <Slider 
+                      id="press-interval"
+                      min={500}
+                      max={10000}
+                      step={100}
+                      value={[newConfig.pressInterval || 2000]}
+                      onValueChange={(values) => setNewConfig({...newConfig, pressInterval: values[0]})}
                     />
-                    <Label htmlFor="linkedToStrategy">Collega a Strategia</Label>
                   </div>
                   
-                  {buttonConfig.linkedToStrategy && (
-                    <div className="space-y-2 col-span-2">
-                      <Label htmlFor="selectedStrategy">Seleziona Strategia</Label>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label htmlFor="press-count">Numero di pressioni</Label>
+                      <span className="text-sm text-muted-foreground">{newConfig.pressCount} click</span>
+                    </div>
+                    <Slider 
+                      id="press-count"
+                      min={1}
+                      max={20}
+                      step={1}
+                      value={[newConfig.pressCount || 1]}
+                      onValueChange={(values) => setNewConfig({...newConfig, pressCount: values[0]})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label htmlFor="wait-between-press">Attesa tra pressioni (ms)</Label>
+                      <span className="text-sm text-muted-foreground">{newConfig.waitBetweenPress} ms</span>
+                    </div>
+                    <Slider 
+                      id="wait-between-press"
+                      min={100}
+                      max={3000}
+                      step={100}
+                      value={[newConfig.waitBetweenPress || 500]}
+                      onValueChange={(values) => setNewConfig({...newConfig, waitBetweenPress: values[0]})}
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="stop-on-win" className="cursor-pointer">Stop automatico su vittoria</Label>
+                    <Switch 
+                      id="stop-on-win" 
+                      checked={newConfig.stopOnWin}
+                      onCheckedChange={(checked) => setNewConfig({...newConfig, stopOnWin: checked})}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="linked-to-strategy" className="cursor-pointer">Collegato a strategia</Label>
+                    <Switch 
+                      id="linked-to-strategy" 
+                      checked={newConfig.linkedToStrategy}
+                      onCheckedChange={(checked) => setNewConfig({...newConfig, linkedToStrategy: checked})}
+                    />
+                  </div>
+                  
+                  {newConfig.linkedToStrategy && (
+                    <div className="space-y-2">
+                      <Label htmlFor="selected-strategy">Strategia collegata</Label>
                       <Select 
-                        onValueChange={(value) => handleSelectChange("selectedStrategy", value)}
-                        value={buttonConfig.selectedStrategy}
+                        value={newConfig.selectedStrategy} 
+                        onValueChange={(value) => setNewConfig({...newConfig, selectedStrategy: value})}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger id="selected-strategy">
                           <SelectValue placeholder="Seleziona una strategia" />
                         </SelectTrigger>
                         <SelectContent>
-                          {strategiesData?.strategies.map((strategy) => (
-                            <SelectItem key={strategy.id} value={String(strategy.id)}>
-                              {strategy.type} (Puntata iniziale: €{strategy.initialBet})
+                          {strategies?.map((strategy: any) => (
+                            <SelectItem key={strategy.id} value={strategy.id.toString()}>
+                              {strategy.type} (Bet: {strategy.initialBet}€)
                             </SelectItem>
-                          ))}
+                          )) || <SelectItem value="">Nessuna strategia disponibile</SelectItem>}
                         </SelectContent>
                       </Select>
                     </div>
                   )}
                 </div>
-              </TabsContent>
-            </Tabs>
-            
-            <div className="flex justify-end space-x-3 pt-4 border-t border-border">
-              <Button
-                variant="outline"
-                onClick={() => setIsConfiguring(false)}
-              >
-                Annulla
-              </Button>
-              <Button
-                onClick={handleSaveButton}
-              >
-                Salva Configurazione
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {/* Existing Button Configurations */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-            {savedButtons?.buttons && savedButtons.buttons.length > 0 ? (
-              savedButtons.buttons.map((button) => (
-                <Card key={button.id} className="border border-border">
-                  <CardHeader className="p-4 bg-muted/30 border-b border-border">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-medium">{button.name}</h3>
-                      <div className="flex space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteButton(button.id)}
-                          className="h-8 w-8 text-destructive"
-                        >
-                          <span className="material-icons text-sm">delete</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="p-4 space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Area Target:</span>
-                        <span>{button.targetArea}</span>
-                      </div>
-                      
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Intervallo:</span>
-                        <span>{button.pressInterval} secondi</span>
-                      </div>
-                      
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Ripetizioni:</span>
-                        <span>{button.pressCount}</span>
-                      </div>
-                      
-                      {button.linkedToStrategy && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Strategia:</span>
-                          <span className="font-medium text-primary">{
-                            strategiesData?.strategies.find(s => String(s.id) === button.selectedStrategy)?.type || 'N/D'
-                          }</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div>
-                      {selectedButton === button.id ? (
-                        <Button
-                          variant="destructive"
-                          className="w-full"
-                          onClick={handleStopAutomation}
-                        >
-                          <span className="material-icons mr-2">stop</span>
-                          Ferma Automazione
-                        </Button>
-                      ) : (
-                        <Button
-                          className="w-full"
-                          onClick={() => handleStartAutomation(button.id)}
-                        >
-                          <span className="material-icons mr-2">smart_button</span>
-                          Avvia Automazione
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-10 border border-dashed border-border rounded-lg bg-muted/30">
-                <div className="material-icons text-4xl text-muted-foreground mb-2">
-                  touch_app
-                </div>
-                <h3 className="font-medium mb-1">Nessun Pulsante Configurato</h3>
-                <p className="text-muted-foreground text-sm max-w-md mx-auto mb-4">
-                  Configura il tuo primo pulsante di automazione per iniziare a creare sequenze di interazioni automatizzate.
-                </p>
-                <Button
-                  onClick={() => setIsConfiguring(true)}
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setNewConfig({
+                      name: "",
+                      pressInterval: 2000,
+                      pressCount: 1,
+                      targetArea: "center",
+                      coordinates: { x: 0, y: 0 },
+                      pressPattern: "sequential",
+                      waitBetweenPress: 500,
+                      stopOnWin: false,
+                      linkedToStrategy: false,
+                      selectedStrategy: ""
+                    });
+                    setIsEditing(false);
+                    setSelectedButtonId(null);
+                  }}
                 >
-                  <span className="material-icons mr-2">add</span>
-                  Aggiungi Pulsante
+                  Annulla
                 </Button>
-              </div>
-            )}
-          </div>
-          
-          {/* Information Cards */}
-          {savedButtons?.buttons && savedButtons.buttons.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <Card className="border border-border">
-                <CardContent className="p-4 space-y-2 flex flex-col items-center text-center">
-                  <div className="material-icons text-2xl text-primary mt-4 mb-2">touch_app</div>
-                  <h3 className="font-medium">Automazione Precisa</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Sequenze di clic precise con tempi personalizzabili per ogni pulsante del gioco.
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card className="border border-border">
-                <CardContent className="p-4 space-y-2 flex flex-col items-center text-center">
-                  <div className="material-icons text-2xl text-primary mt-4 mb-2">psychology</div>
-                  <h3 className="font-medium">Integrazione con Strategie</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Collega automazioni pulsanti alle tue strategie di gioco per un'esecuzione coordinata.
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card className="border border-border">
-                <CardContent className="p-4 space-y-2 flex flex-col items-center text-center">
-                  <div className="material-icons text-2xl text-primary mt-4 mb-2">auto_fix_high</div>
-                  <h3 className="font-medium">Pattern Avanzati</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Definisci pattern di clic sequenziali, casuali o alternati in base alle necessità.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </>
-      )}
-    </div>
+                <Button onClick={handleSaveConfig}>
+                  <SaveAll className="mr-2 h-4 w-4" />
+                  {isEditing ? "Aggiorna" : "Salva"} Configurazione
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </PageLayout>
   );
 }

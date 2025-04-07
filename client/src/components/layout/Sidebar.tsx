@@ -1,34 +1,34 @@
-import { Link, useLocation } from "wouter";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Link, useLocation } from 'wouter';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { 
+  Dice5, Settings, BarChart, Brain, 
+  Activity, X, LayoutDashboard 
+} from 'lucide-react';
 
 interface SidebarProps {
   mobileMenuOpen: boolean;
-  setMobileMenuOpen: (value: boolean) => void;
+  setMobileMenuOpen: (open: boolean) => void;
 }
 
 export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarProps) {
   const [location] = useLocation();
-  
+
   const navItems = [
-    { href: "/", label: "Dashboard", icon: "dashboard" },
-    { href: "/automazione", label: "Automazione Pulsanti", icon: "touch_app" },
-    { href: "/statistiche", label: "Statistiche & Reports", icon: "bar_chart" },
-    { href: "/ai", label: "AI Analysis", icon: "psychology" },
-    { href: "/impostazioni", label: "Impostazioni", icon: "settings" },
-  ];
-  
-  const savedStrategies = [
-    { id: "martingala", name: "Martingala Basic" },
-    { id: "fibonacci", name: "Fibonacci Sequence" },
-    { id: "custom1", name: "Custom Strategy #1" },
+    { href: '/', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+    { href: '/automazione', label: 'Automazione', icon: <Dice5 className="w-5 h-5" /> },
+    { href: '/statistiche', label: 'Statistiche', icon: <BarChart className="w-5 h-5" /> },
+    { href: '/ai', label: 'AI Analysis', icon: <Brain className="w-5 h-5" /> },
+    { href: '/impostazioni', label: 'Impostazioni', icon: <Settings className="w-5 h-5" /> }
   ];
 
   return (
     <>
-      {/* Mobile menu overlay */}
+      {/* Mobile Overlay */}
       {mobileMenuOpen && (
         <div 
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -36,75 +36,56 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarPr
       {/* Sidebar */}
       <aside 
         className={cn(
-          "bg-sidebar border-r border-sidebar-border w-64 flex flex-col fixed inset-y-0 z-50 md:relative transition-transform duration-300 ease-in-out",
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static md:h-screen md:z-0 flex flex-col",
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Logo */}
-        <div className="p-4 flex items-center border-b border-sidebar-border">
-          <div className="bg-primary rounded-full w-10 h-10 flex items-center justify-center mr-3">
-            <span className="material-icons text-primary-foreground">casino</span>
-          </div>
-          <h1 className="text-lg font-medium text-sidebar-foreground">Davide Roulette</h1>
+        {/* Header */}
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <Link href="/" className="flex items-center">
+            <Activity className="w-6 h-6 text-primary mr-2" />
+            <h1 className="text-xl font-bold">Davide Roulette</h1>
+          </Link>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileMenuOpen(false)}
+            className="md:hidden"
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </div>
         
-        {/* Navigation Links */}
-        <nav className="flex-1 overflow-y-auto py-4">
-          <ul>
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto p-4">
+          <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.href}>
                 <Link href={item.href}>
-                  <a
+                  <Button
+                    variant={location === item.href ? "default" : "ghost"}
                     className={cn(
-                      "flex items-center px-4 py-3 text-sidebar-foreground hover:text-sidebar-foreground transition-colors",
-                      location === item.href 
-                        ? "text-sidebar-primary" 
-                        : "text-sidebar-foreground/70"
+                      "w-full justify-start text-left",
+                      location === item.href ? "bg-primary text-primary-foreground" : "hover:bg-accent hover:text-accent-foreground"
                     )}
                   >
-                    <span className="material-icons mr-3">{item.icon}</span>
-                    {item.label}
-                  </a>
+                    {item.icon}
+                    <span className="ml-2">{item.label}</span>
+                  </Button>
                 </Link>
-              </li>
-            ))}
-          </ul>
-          
-          {/* Strategy Presets Section */}
-          <div className="px-4 pt-6 pb-2">
-            <h2 className="text-xs uppercase tracking-wide text-sidebar-foreground/50 font-medium">
-              Saved Strategies
-            </h2>
-          </div>
-          <ul>
-            {savedStrategies.map((strategy) => (
-              <li key={strategy.id}>
-                <a 
-                  href="#"
-                  className="flex items-center px-4 py-2 text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    // Would load strategy in a real app
-                  }}
-                >
-                  <span className="material-icons text-sm mr-3">bookmark</span>
-                  {strategy.name}
-                </a>
               </li>
             ))}
           </ul>
         </nav>
         
-        {/* User Profile Section */}
-        <div className="p-4 border-t border-sidebar-border">
-          <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center mr-2">
-              <span className="material-icons text-sm text-sidebar-accent-foreground">person</span>
+        {/* Footer */}
+        <div className="p-4 border-t border-border">
+          <div className="bg-card p-3 rounded-md">
+            <div className="text-sm font-medium">Demo Version</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Connected to PlanetWin365
             </div>
-            <div className="text-sidebar-foreground">Davide</div>
-            <button className="ml-auto text-sidebar-foreground/50 hover:text-sidebar-foreground">
-              <span className="material-icons text-sm">logout</span>
-            </button>
           </div>
         </div>
       </aside>

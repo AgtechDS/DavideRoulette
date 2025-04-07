@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { CircleDashed, BarChart3, BrainCircuit, ArrowUpRightSquare, Dices, RefreshCcw, BadgeAlert, BarChartHorizontal, Settings2, ArrowRightLeft } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import PageLayout from "@/components/layout/PageLayout";
 
 interface AIInsight {
   strategyAnalysis: string;
@@ -131,55 +132,56 @@ export default function AIAnalysis() {
   const risk = getRiskLevel(riskScore);
   
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Analisi AI</h1>
-          <p className="text-muted-foreground">
-            Analisi avanzata delle strategie e dei risultati di gioco basata su intelligenza artificiale
-          </p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Select value={modelType} onValueChange={setModelType}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Modello AI" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="gpt-4o">GPT-4o (Avanzato)</SelectItem>
-              <SelectItem value="gpt-3.5-turbo">GPT-3.5 (Rapido)</SelectItem>
-            </SelectContent>
-          </Select>
+    <PageLayout>
+      <div className="container mx-auto p-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Analisi AI</h1>
+            <p className="text-muted-foreground">
+              Analisi avanzata delle strategie e dei risultati di gioco basata su intelligenza artificiale
+            </p>
+          </div>
           
-          <Select value={analysisDepth} onValueChange={setAnalysisDepth}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Profondità analisi" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="quick">Rapida</SelectItem>
-              <SelectItem value="standard">Standard</SelectItem>
-              <SelectItem value="detailed">Dettagliata</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button 
-            onClick={() => analysisMutation.mutate()} 
-            disabled={analysisMutation.isPending || !hasEnoughData}
-          >
-            {analysisMutation.isPending ? (
-              <>
-                <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
-                Analisi in corso...
-              </>
-            ) : (
-              <>
-                <RefreshCcw className="mr-2 h-4 w-4" />
-                Aggiorna analisi
-              </>
-            )}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Select value={modelType} onValueChange={setModelType}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Modello AI" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gpt-4o">GPT-4o (Avanzato)</SelectItem>
+                <SelectItem value="gpt-3.5-turbo">GPT-3.5 (Rapido)</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={analysisDepth} onValueChange={setAnalysisDepth}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Profondità analisi" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="quick">Rapida</SelectItem>
+                <SelectItem value="standard">Standard</SelectItem>
+                <SelectItem value="detailed">Dettagliata</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Button 
+              onClick={() => analysisMutation.mutate()} 
+              disabled={analysisMutation.isPending || !hasEnoughData}
+            >
+              {analysisMutation.isPending ? (
+                <>
+                  <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
+                  Analisi in corso...
+                </>
+              ) : (
+                <>
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Aggiorna analisi
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
       
       {!hasEnoughData && (
         <Alert className="mb-6">
@@ -751,5 +753,6 @@ export default function AIAnalysis() {
         </p>
       </div>
     </div>
+    </PageLayout>
   );
 }

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import Sidebar from "@/components/layout/Sidebar";
-import TopBar from "@/components/layout/TopBar";
+import PageLayout from "@/components/layout/PageLayout";
 import StatCards from "@/components/dashboard/StatCards";
 import StrategySelector from "@/components/dashboard/StrategySelector";
 import AIInsights from "@/components/dashboard/AIInsights";
@@ -14,7 +13,6 @@ import { Strategy, BotStatus } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [botStatus, setBotStatus] = useState<BotStatus>({ active: false, strategy: null });
   const { toast } = useToast();
 
@@ -43,7 +41,7 @@ export default function Dashboard() {
       });
       refetchBotStatus();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Failed to Start Bot",
         description: error.message,
@@ -65,7 +63,7 @@ export default function Dashboard() {
       });
       refetchBotStatus();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Failed to Stop Bot",
         description: error.message,
@@ -77,7 +75,7 @@ export default function Dashboard() {
   // Update bot status when data changes
   useEffect(() => {
     if (botStatusData) {
-      setBotStatus(botStatusData);
+      setBotStatus(botStatusData as BotStatus);
     }
   }, [botStatusData]);
 
@@ -90,50 +88,38 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
-      {/* Sidebar - hidden on mobile */}
-      <Sidebar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
-      
+    <PageLayout>
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar 
-          mobileMenuOpen={mobileMenuOpen} 
-          setMobileMenuOpen={setMobileMenuOpen}
-          botStatus={botStatus}
-        />
+      <div className="p-4 md:p-6">
+        <StatCards />
         
-        {/* Main Scrollable Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <StatCards />
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-            {/* Strategy Configuration Section */}
-            <div className="lg:col-span-1">
-              <StrategySelector 
-                onStartBot={handleStartBot}
-                currentStrategy={strategy}
-                botStatus={botStatus}
-              />
-              <AIInsights />
-            </div>
-            
-            {/* Performance Tracking Section */}
-            <div className="lg:col-span-2">
-              <PerformanceChart />
-              <GameLog />
-              <BotActivityLog />
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          {/* Strategy Configuration Section */}
+          <div className="lg:col-span-1">
+            <StrategySelector 
+              onStartBot={handleStartBot}
+              currentStrategy={strategy as Strategy | null}
+              botStatus={botStatus}
+            />
+            <AIInsights />
           </div>
-        </main>
+          
+          {/* Performance Tracking Section */}
+          <div className="lg:col-span-2">
+            <PerformanceChart />
+            <GameLog />
+            <BotActivityLog />
+          </div>
+        </div>
+        
+        {/* Bot Status Notification */}
+        {botStatus.active && (
+          <StatusNotification 
+            botStatus={botStatus} 
+            onClose={handleStopBot}
+          />
+        )}
       </div>
-
-      {/* Bot Status Notification */}
-      {botStatus.active && (
-        <StatusNotification 
-          botStatus={botStatus} 
-          onClose={handleStopBot}
-        />
-      )}
-    </div>
+    </PageLayout>
   );
 }

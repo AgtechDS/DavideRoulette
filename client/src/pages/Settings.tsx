@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import PageLayout from "@/components/layout/PageLayout";
 
 // UI Components
 import {
@@ -491,120 +492,187 @@ export default function Settings() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex flex-col space-y-2 mb-6">
-        <h1 className="text-3xl font-bold flex items-center">
-          <Settings2 className="mr-2 h-8 w-8" />
-          Impostazioni
-        </h1>
-        <p className="text-muted-foreground">
-          Configura le impostazioni dell'applicazione, del bot e del tuo account
-        </p>
-      </div>
+    <PageLayout>
+      <div className="container mx-auto p-6">
+        <div className="flex flex-col space-y-2 mb-6">
+          <h1 className="text-3xl font-bold flex items-center">
+            <Settings2 className="mr-2 h-8 w-8" />
+            Impostazioni
+          </h1>
+          <p className="text-muted-foreground">
+            Configura le impostazioni dell'applicazione, del bot e del tuo account
+          </p>
+        </div>
 
-      <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-          <TabsTrigger value="general">
-            <Palette className="mr-2 h-4 w-4" />
-            Generali
-          </TabsTrigger>
-          <TabsTrigger value="account">
-            <User className="mr-2 h-4 w-4" />
-            Account
-          </TabsTrigger>
-          <TabsTrigger value="bot">
-            <Bot className="mr-2 h-4 w-4" />
-            Bot
-          </TabsTrigger>
-          <TabsTrigger value="casino">
-            <Joystick className="mr-2 h-4 w-4" />
-            Casinò
-          </TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+            <TabsTrigger value="general">
+              <Palette className="mr-2 h-4 w-4" />
+              Generali
+            </TabsTrigger>
+            <TabsTrigger value="account">
+              <User className="mr-2 h-4 w-4" />
+              Account
+            </TabsTrigger>
+            <TabsTrigger value="bot">
+              <Bot className="mr-2 h-4 w-4" />
+              Bot
+            </TabsTrigger>
+            <TabsTrigger value="casino">
+              <Joystick className="mr-2 h-4 w-4" />
+              Casinò
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Sezione Impostazioni Generali */}
-        <TabsContent value="general">
-          <Card>
-            <CardHeader>
-              <CardTitle>Impostazioni Generali</CardTitle>
-              <CardDescription>
-                Configura le impostazioni di base dell'applicazione
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isGeneralLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-4 w-[250px]" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-4 w-[200px]" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-4 w-[150px]" />
-                  <Skeleton className="h-8 w-full" />
-                </div>
-              ) : (
-                <Form {...generalForm}>
-                  <form onSubmit={generalForm.handleSubmit(onSubmitGeneralSettings)} className="space-y-6">
-                    <FormField
-                      control={generalForm.control}
-                      name="language"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Lingua</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleziona lingua" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="it">Italiano</SelectItem>
-                              <SelectItem value="en">English</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Lingua utilizzata nell'interfaccia dell'applicazione
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={generalForm.control}
-                      name="theme"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tema</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleziona tema" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="light">Chiaro</SelectItem>
-                              <SelectItem value="dark">Scuro</SelectItem>
-                              <SelectItem value="system">Sistema</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Tema dell'interfaccia utente
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Sezione Impostazioni Generali */}
+          <TabsContent value="general">
+            <Card>
+              <CardHeader>
+                <CardTitle>Impostazioni Generali</CardTitle>
+                <CardDescription>
+                  Configura le impostazioni di base dell'applicazione
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isGeneralLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-4 w-[200px]" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-4 w-[150px]" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                ) : (
+                  <Form {...generalForm}>
+                    <form onSubmit={generalForm.handleSubmit(onSubmitGeneralSettings)} className="space-y-6">
                       <FormField
                         control={generalForm.control}
-                        name="notifications"
+                        name="language"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Lingua</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleziona lingua" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="it">Italiano</SelectItem>
+                                <SelectItem value="en">English</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormDescription>
+                              Lingua utilizzata nell'interfaccia dell'applicazione
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={generalForm.control}
+                        name="theme"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tema</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleziona tema" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="light">Chiaro</SelectItem>
+                                <SelectItem value="dark">Scuro</SelectItem>
+                                <SelectItem value="system">Sistema</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormDescription>
+                              Tema dell'interfaccia utente
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={generalForm.control}
+                          name="notifications"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base">Notifiche</FormLabel>
+                                <FormDescription>
+                                  Ricevi notifiche sugli eventi importanti
+                                </FormDescription>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={generalForm.control}
+                          name="sounds"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base">Suoni</FormLabel>
+                                <FormDescription>
+                                  Abilita effetti sonori nell'applicazione
+                                </FormDescription>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={generalForm.control}
+                        name="autoSaveInterval"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Intervallo di salvataggio automatico (minuti)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={1}
+                                max={60}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Frequenza con cui vengono salvate automaticamente le modifiche
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={generalForm.control}
+                        name="devMode"
                         render={({ field }) => (
                           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
-                              <FormLabel className="text-base">Notifiche</FormLabel>
+                              <FormLabel className="text-base">Modalità sviluppatore</FormLabel>
                               <FormDescription>
-                                Ricevi notifiche sugli eventi importanti
+                                Abilita funzionalità avanzate e log dettagliati
                               </FormDescription>
                             </div>
                             <FormControl>
@@ -617,822 +685,785 @@ export default function Settings() {
                         )}
                       />
 
-                      <FormField
-                        control={generalForm.control}
-                        name="sounds"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base">Suoni</FormLabel>
-                              <FormDescription>
-                                Abilita effetti sonori nell'applicazione
-                              </FormDescription>
+                      <Separator />
+
+                      <Accordion type="single" collapsible>
+                        <AccordionItem value="danger-zone">
+                          <AccordionTrigger className="text-red-500 font-medium">
+                            <div className="flex items-center">
+                              <AlertCircle className="mr-2 h-4 w-4" />
+                              Zona pericolo
                             </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-4">
+                              <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Attenzione</AlertTitle>
+                                <AlertDescription>
+                                  Le azioni in questa sezione sono irreversibili. Assicurati di voler procedere.
+                                </AlertDescription>
+                              </Alert>
 
-                    <FormField
-                      control={generalForm.control}
-                      name="autoSaveInterval"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Intervallo di salvataggio automatico (minuti)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min={1}
-                              max={60}
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Frequenza con cui vengono salvate automaticamente le modifiche
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500/10">
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Reset statistiche
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Reset statistiche</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Questa azione cancellerà tutte le statistiche e i dati delle partite. I dati non potranno essere recuperati.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleReset("statistics")}
+                                        disabled={isResetting}
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        {isResetting && resetType === "statistics" ? (
+                                          <>
+                                            <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
+                                            Resetting...
+                                          </>
+                                        ) : (
+                                          "Reset statistiche"
+                                        )}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
 
-                    <FormField
-                      control={generalForm.control}
-                      name="devMode"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Modalità sviluppatore</FormLabel>
-                            <FormDescription>
-                              Abilita funzionalità avanzate e log dettagliati
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500/10">
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Reset strategie
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Reset strategie</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Questa azione cancellerà tutte le strategie personalizzate. Verranno mantenute solo le strategie predefinite.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleReset("strategies")}
+                                        disabled={isResetting}
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        {isResetting && resetType === "strategies" ? (
+                                          <>
+                                            <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
+                                            Resetting...
+                                          </>
+                                        ) : (
+                                          "Reset strategie"
+                                        )}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
 
-                    <Separator />
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500/10">
+                                      <FileText className="mr-2 h-4 w-4" />
+                                      Cancella log
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Cancella log</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Questa azione cancellerà tutti i log del bot. I log non potranno essere recuperati.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleReset("logs")}
+                                        disabled={isResetting}
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        {isResetting && resetType === "logs" ? (
+                                          <>
+                                            <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
+                                            Cancellando...
+                                          </>
+                                        ) : (
+                                          "Cancella log"
+                                        )}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
 
-                    <Accordion type="single" collapsible>
-                      <AccordionItem value="danger-zone">
-                        <AccordionTrigger className="text-red-500 font-medium">
-                          <div className="flex items-center">
-                            <AlertCircle className="mr-2 h-4 w-4" />
-                            Zona pericolo
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-4">
-                            <Alert variant="destructive">
-                              <AlertCircle className="h-4 w-4" />
-                              <AlertTitle>Attenzione</AlertTitle>
-                              <AlertDescription>
-                                Le azioni in questa sezione sono irreversibili. Assicurati di voler procedere.
-                              </AlertDescription>
-                            </Alert>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500/10">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Reset statistiche
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Reset statistiche</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Questa azione cancellerà tutte le statistiche e i dati delle partite. I dati non potranno essere recuperati.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Annulla</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleReset("statistics")}
-                                      disabled={isResetting}
-                                      className="bg-red-500 hover:bg-red-600"
-                                    >
-                                      {isResetting && resetType === "statistics" ? (
-                                        <>
-                                          <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
-                                          Resetting...
-                                        </>
-                                      ) : (
-                                        "Reset statistiche"
-                                      )}
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500/10">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Reset strategie
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Reset strategie</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Questa azione cancellerà tutte le strategie personalizzate. Verranno mantenute solo le strategie predefinite.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Annulla</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleReset("strategies")}
-                                      disabled={isResetting}
-                                      className="bg-red-500 hover:bg-red-600"
-                                    >
-                                      {isResetting && resetType === "strategies" ? (
-                                        <>
-                                          <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
-                                          Resetting...
-                                        </>
-                                      ) : (
-                                        "Reset strategie"
-                                      )}
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500/10">
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    Cancella log
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Cancella log</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Questa azione cancellerà tutti i log del bot. I log non potranno essere recuperati.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Annulla</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleReset("logs")}
-                                      disabled={isResetting}
-                                      className="bg-red-500 hover:bg-red-600"
-                                    >
-                                      {isResetting && resetType === "logs" ? (
-                                        <>
-                                          <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
-                                          Cancellando...
-                                        </>
-                                      ) : (
-                                        "Cancella log"
-                                      )}
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Reset completo
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Reset completo</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Questa azione ripristinerà l'applicazione allo stato iniziale, cancellando tutti i dati: statistiche, strategie personalizzate e log. Questa operazione non può essere annullata.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Annulla</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleReset("all")}
-                                      disabled={isResetting}
-                                      className="bg-red-500 hover:bg-red-600"
-                                    >
-                                      {isResetting && resetType === "all" ? (
-                                        <>
-                                          <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
-                                          Resetting...
-                                        </>
-                                      ) : (
-                                        "Reset completo"
-                                      )}
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500/10">
+                                      <AlertCircle className="mr-2 h-4 w-4" />
+                                      Reset completo
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Reset completo</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Questa azione resetterà l'intera applicazione ripristinando le impostazioni predefinite. Tutti i dati personalizzati andranno persi.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleReset("all")}
+                                        disabled={isResetting}
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        {isResetting && resetType === "all" ? (
+                                          <>
+                                            <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
+                                            Resetting...
+                                          </>
+                                        ) : (
+                                          "Reset completo"
+                                        )}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
                             </div>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </form>
-                </Form>
-              )}
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={() => generalForm.reset()}
-                disabled={isGeneralLoading || saveGeneralSettings.isPending}
-              >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Ripristina
-              </Button>
-              <Button
-                onClick={generalForm.handleSubmit(onSubmitGeneralSettings)}
-                disabled={isGeneralLoading || saveGeneralSettings.isPending}
-              >
-                {saveGeneralSettings.isPending ? (
-                  <>
-                    <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
-                    Salvataggio...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Salva impostazioni
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
 
-        {/* Sezione Impostazioni Account */}
-        <TabsContent value="account">
-          <Card>
-            <CardHeader>
-              <CardTitle>Impostazioni Account</CardTitle>
-              <CardDescription>
-                Gestisci le informazioni del tuo account e la sicurezza
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isAccountLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-4 w-[250px]" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-4 w-[200px]" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-4 w-[150px]" />
-                  <Skeleton className="h-8 w-full" />
-                </div>
-              ) : (
-                <Form {...accountForm}>
-                  <form onSubmit={accountForm.handleSubmit(onSubmitAccountSettings)} className="space-y-6">
-                    <FormField
-                      control={accountForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Il tuo nome utente per accedere all'applicazione
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={accountForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            L'indirizzo email associato al tuo account
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={accountForm.control}
-                      name="displayName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome visualizzato</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Il nome che verrà visualizzato nell'interfaccia
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Separator />
-
-                    <FormField
-                      control={accountForm.control}
-                      name="changePassword"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Cambia password</FormLabel>
-                            <FormDescription>
-                              Abilita per modificare la password del tuo account
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    {accountForm.watch("changePassword") && (
-                      <div className="space-y-4">
-                        <FormField
-                          control={accountForm.control}
-                          name="currentPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Password attuale</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => generalForm.reset()}
+                          disabled={saveGeneralSettings.isPending}
+                        >
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          Ripristina
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={saveGeneralSettings.isPending}
+                        >
+                          {saveGeneralSettings.isPending ? (
+                            <>
+                              <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
+                              Salvando...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="mr-2 h-4 w-4" />
+                              Salva impostazioni
+                            </>
                           )}
-                        />
-
-                        <FormField
-                          control={accountForm.control}
-                          name="newPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nuova password</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} />
-                              </FormControl>
-                              <FormDescription>
-                                La password deve essere lunga almeno 8 caratteri
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={accountForm.control}
-                          name="confirmPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Conferma password</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        </Button>
                       </div>
-                    )}
-                  </form>
-                </Form>
-              )}
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={() => accountForm.reset()}
-                disabled={isAccountLoading || saveAccountSettings.isPending}
-              >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Ripristina
-              </Button>
-              <Button
-                onClick={accountForm.handleSubmit(onSubmitAccountSettings)}
-                disabled={isAccountLoading || saveAccountSettings.isPending}
-              >
-                {saveAccountSettings.isPending ? (
-                  <>
-                    <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
-                    Salvataggio...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Salva impostazioni
-                  </>
+                    </form>
+                  </Form>
                 )}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* Sezione Impostazioni Bot */}
-        <TabsContent value="bot">
-          <Card>
-            <CardHeader>
-              <CardTitle>Impostazioni Bot</CardTitle>
-              <CardDescription>
-                Configura il comportamento del bot e le strategie automatizzate
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isBotLoading || isStrategiesLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-4 w-[250px]" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-4 w-[200px]" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-4 w-[150px]" />
-                  <Skeleton className="h-8 w-full" />
-                </div>
-              ) : (
-                <Form {...botForm}>
-                  <form onSubmit={botForm.handleSubmit(onSubmitBotSettings)} className="space-y-6">
-                    <FormField
-                      control={botForm.control}
-                      name="autoStartBot"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Avvio automatico</FormLabel>
-                            <FormDescription>
-                              Avvia automaticamente il bot all'apertura dell'applicazione
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={botForm.control}
-                      name="defaultStrategy"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Strategia predefinita</FormLabel>
-                          <Select
-                            onValueChange={(value) => field.onChange(parseInt(value))}
-                            value={field.value?.toString()}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleziona strategia predefinita" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {strategiesData?.strategies.map((strategy: any) => (
-                                <SelectItem key={strategy.id} value={strategy.id.toString()}>
-                                  {strategy.type.charAt(0).toUpperCase() + strategy.type.slice(1)} ({strategy.initialBet}€)
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Strategia utilizzata all'avvio automatico del bot
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={botForm.control}
-                      name="logLevel"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Livello di log</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleziona livello di log" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="error">Solo errori</SelectItem>
-                              <SelectItem value="warning">Errori e avvisi</SelectItem>
-                              <SelectItem value="info">Informazioni generali</SelectItem>
-                              <SelectItem value="debug">Debug (dettagliato)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Dettaglio delle informazioni nei log del bot
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={botForm.control}
-                      name="screenshotFrequency"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Frequenza screenshot</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleziona frequenza screenshot" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="never">Mai</SelectItem>
-                              <SelectItem value="errors">Solo su errori</SelectItem>
-                              <SelectItem value="wins">Su vincite</SelectItem>
-                              <SelectItem value="always">Ad ogni giro</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Quando il bot deve catturare screenshot dell'interfaccia
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={botForm.control}
-                      name="maxSessionTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Durata massima sessione (minuti)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min={5}
-                              max={1440}
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Durata massima di una sessione di gioco automatizzata (0 = nessun limite)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={botForm.control}
-                      name="enableEmergencyStop"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Stop d'emergenza</FormLabel>
-                            <FormDescription>
-                              Ferma automaticamente il bot in caso di condizioni critiche
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    {botForm.watch("enableEmergencyStop") && (
-                      <div className="space-y-4 p-4 border rounded-lg">
-                        <h3 className="text-sm font-medium flex items-center">
-                          <ShieldAlert className="mr-2 h-4 w-4 text-amber-500" />
-                          Condizioni di stop d'emergenza
-                        </h3>
-
-                        <FormField
-                          control={botForm.control}
-                          name="emergencyStopConditions.maxConsecutiveLosses"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Perdite consecutive massime</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min={1}
-                                  max={100}
-                                  {...field}
-                                  onChange={(e) => field.onChange(parseInt(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                Numero massimo di perdite consecutive prima dello stop automatico
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={botForm.control}
-                          name="emergencyStopConditions.balanceThreshold"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Soglia minima saldo (€)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  {...field}
-                                  onChange={(e) => field.onChange(parseInt(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                Ferma il bot quando il saldo scende sotto questa soglia
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
-                  </form>
-                </Form>
-              )}
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={() => botForm.reset()}
-                disabled={isBotLoading || saveBotSettings.isPending}
-              >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Ripristina
-              </Button>
-              <Button
-                onClick={botForm.handleSubmit(onSubmitBotSettings)}
-                disabled={isBotLoading || saveBotSettings.isPending}
-              >
-                {saveBotSettings.isPending ? (
-                  <>
-                    <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
-                    Salvataggio...
-                  </>
+          {/* Sezione Impostazioni Account */}
+          <TabsContent value="account">
+            <Card>
+              <CardHeader>
+                <CardTitle>Impostazioni Account</CardTitle>
+                <CardDescription>
+                  Gestisci le informazioni del tuo account e la sicurezza
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isAccountLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-4 w-[200px]" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-4 w-[150px]" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
                 ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Salva impostazioni
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        {/* Sezione Impostazioni Casinò */}
-        <TabsContent value="casino">
-          <Card>
-            <CardHeader>
-              <CardTitle>Impostazioni Casinò</CardTitle>
-              <CardDescription>
-                Configura le impostazioni di connessione al casinò e preferenze di gioco
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isCasinoLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-4 w-[250px]" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-4 w-[200px]" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-4 w-[150px]" />
-                  <Skeleton className="h-8 w-full" />
-                </div>
-              ) : (
-                <Form {...casinoForm}>
-                  <form onSubmit={casinoForm.handleSubmit(onSubmitCasinoSettings)} className="space-y-6">
-                    <FormField
-                      control={casinoForm.control}
-                      name="casinoUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>URL del casinò</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Indirizzo del casinò online da utilizzare
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={casinoForm.control}
-                      name="gameType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tipo di gioco</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleziona tipo di gioco" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="europeanRoulette">Roulette Europea (37 numeri)</SelectItem>
-                              <SelectItem value="americanRoulette">Roulette Americana (38 numeri)</SelectItem>
-                              <SelectItem value="liveCasino">Roulette Live con croupier</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Tipo di roulette da utilizzare per le puntate
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={casinoForm.control}
-                      name="preferredTable"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tavolo preferito</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Nome del tavolo da utilizzare (solo per casinò live)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Separator />
-
-                    <FormField
-                      control={casinoForm.control}
-                      name="credentials.saveCredentials"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Salva credenziali</FormLabel>
-                            <FormDescription>
-                              Salva le credenziali per il login automatico
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    {casinoForm.watch("credentials.saveCredentials") && (
-                      <div className="space-y-4 p-4 border rounded-lg">
-                        <div className="flex items-center text-amber-500 mb-2">
-                          <Lock className="h-4 w-4 mr-2" />
-                          <p className="text-xs">Le credenziali vengono salvate in modo sicuro e utilizzate solo per l'accesso automatico</p>
-                        </div>
-
+                  <Form {...accountForm}>
+                    <form onSubmit={accountForm.handleSubmit(onSubmitAccountSettings)} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
-                          control={casinoForm.control}
-                          name="credentials.username"
+                          control={accountForm.control}
+                          name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Username PlanetWin365</FormLabel>
+                              <FormLabel>Username</FormLabel>
                               <FormControl>
                                 <Input {...field} />
                               </FormControl>
+                              <FormDescription>
+                                Il tuo username per accedere all'applicazione
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={accountForm.control}
+                          name="displayName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nome visualizzato</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormDescription>
+                                Il nome che verrà mostrato nell'interfaccia
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={accountForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="email" />
+                            </FormControl>
+                            <FormDescription>
+                              La tua email per le notifiche e il recupero dell'account
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Separator />
+
+                      <div className="space-y-4">
+                        <FormField
+                          control={accountForm.control}
+                          name="changePassword"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel>
+                                  Cambia password
+                                </FormLabel>
+                                <FormDescription>
+                                  Seleziona per modificare la tua password
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+
+                        {accountForm.watch("changePassword") && (
+                          <div className="space-y-4 rounded-md border p-4">
+                            <FormField
+                              control={accountForm.control}
+                              name="currentPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Password attuale</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} type="password" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={accountForm.control}
+                              name="newPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Nuova password</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} type="password" />
+                                  </FormControl>
+                                  <FormDescription>
+                                    Almeno 8 caratteri
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={accountForm.control}
+                              name="confirmPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Conferma password</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} type="password" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => accountForm.reset()}
+                          disabled={saveAccountSettings.isPending}
+                        >
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          Ripristina
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={saveAccountSettings.isPending}
+                        >
+                          {saveAccountSettings.isPending ? (
+                            <>
+                              <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
+                              Salvando...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="mr-2 h-4 w-4" />
+                              Salva impostazioni
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Sezione Impostazioni Bot */}
+          <TabsContent value="bot">
+            <Card>
+              <CardHeader>
+                <CardTitle>Impostazioni Bot</CardTitle>
+                <CardDescription>
+                  Configura il comportamento del bot per l'automazione del gioco
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isBotLoading || isStrategiesLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-4 w-[200px]" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-4 w-[150px]" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                ) : (
+                  <Form {...botForm}>
+                    <form onSubmit={botForm.handleSubmit(onSubmitBotSettings)} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={botForm.control}
+                          name="autoStartBot"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base">
+                                  Avvio automatico
+                                </FormLabel>
+                                <FormDescription>
+                                  Avvia automaticamente il bot all'apertura dell'applicazione
+                                </FormDescription>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={botForm.control}
+                          name="defaultStrategy"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Strategia predefinita</FormLabel>
+                              <Select
+                                onValueChange={(value) => field.onChange(parseInt(value))}
+                                defaultValue={field.value?.toString()}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Seleziona strategia" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {strategiesData?.map((strategy: any) => (
+                                    <SelectItem key={strategy.id} value={strategy.id.toString()}>
+                                      {strategy.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                Strategia da utilizzare quando il bot viene avviato
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={botForm.control}
+                          name="logLevel"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Livello di log</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Seleziona livello" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="error">Solo errori</SelectItem>
+                                  <SelectItem value="warning">Avvisi</SelectItem>
+                                  <SelectItem value="info">Informazioni</SelectItem>
+                                  <SelectItem value="debug">Debug</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                Quantità di informazioni registrate nei log
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={botForm.control}
+                          name="screenshotFrequency"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Frequenza screenshot</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Seleziona frequenza" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="never">Mai</SelectItem>
+                                  <SelectItem value="errors">Solo errori</SelectItem>
+                                  <SelectItem value="wins">Vincite</SelectItem>
+                                  <SelectItem value="always">Sempre</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                Quando salvare screenshot durante il gioco
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={botForm.control}
+                        name="maxSessionTime"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Durata massima sessione (minuti)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={5}
+                                max={1440}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Tempo massimo di funzionamento continuo del bot (0-24 ore)
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Separator />
+
+                      <FormField
+                        control={botForm.control}
+                        name="enableEmergencyStop"
+                        render={({ field }) => (
+                          <FormItem className="space-y-4">
+                            <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base">
+                                  Stop emergenza
+                                </FormLabel>
+                                <FormDescription>
+                                  Ferma automaticamente il bot in caso di perdite consecutive o saldo basso
+                                </FormDescription>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </div>
+
+                            {field.value && (
+                              <div className="rounded-md border p-4 space-y-4">
+                                <FormField
+                                  control={botForm.control}
+                                  name="emergencyStopConditions.maxConsecutiveLosses"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Massimo perdite consecutive</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          type="number"
+                                          min={1}
+                                          max={100}
+                                          {...field}
+                                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                        />
+                                      </FormControl>
+                                      <FormDescription>
+                                        Numero di perdite consecutive prima dell'arresto
+                                      </FormDescription>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={botForm.control}
+                                  name="emergencyStopConditions.balanceThreshold"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Soglia minima saldo (€)</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          type="number"
+                                          min={0}
+                                          {...field}
+                                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                        />
+                                      </FormControl>
+                                      <FormDescription>
+                                        Ferma il bot quando il saldo scende sotto questa soglia
+                                      </FormDescription>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                            )}
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => botForm.reset()}
+                          disabled={saveBotSettings.isPending}
+                        >
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          Ripristina
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={saveBotSettings.isPending}
+                        >
+                          {saveBotSettings.isPending ? (
+                            <>
+                              <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
+                              Salvando...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="mr-2 h-4 w-4" />
+                              Salva impostazioni
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Sezione Impostazioni Casinò */}
+          <TabsContent value="casino">
+            <Card>
+              <CardHeader>
+                <CardTitle>Impostazioni Casinò</CardTitle>
+                <CardDescription>
+                  Configura le connessioni al casinò e preferenze di gioco
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isCasinoLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-4 w-[200px]" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-4 w-[150px]" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                ) : (
+                  <Form {...casinoForm}>
+                    <form onSubmit={casinoForm.handleSubmit(onSubmitCasinoSettings)} className="space-y-6">
+                      <FormField
+                        control={casinoForm.control}
+                        name="casinoUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>URL Casinò</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Indirizzo web del casinò (es. https://www.planetwin365.it)
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Separator />
+
+                      <FormField
+                        control={casinoForm.control}
+                        name="credentials.saveCredentials"
+                        render={({ field }) => (
+                          <FormItem className="space-y-4">
+                            <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base">
+                                  <div className="flex items-center">
+                                    <Lock className="mr-2 h-4 w-4" />
+                                    Salva credenziali
+                                  </div>
+                                </FormLabel>
+                                <FormDescription>
+                                  Memorizza le credenziali per l'accesso automatico (solo account demo)
+                                </FormDescription>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </div>
+
+                            {field.value && (
+                              <div className="rounded-md border p-4 space-y-4">
+                                <Alert>
+                                  <ShieldAlert className="h-4 w-4" />
+                                  <AlertTitle>Sicurezza</AlertTitle>
+                                  <AlertDescription>
+                                    Le credenziali sono salvate in chiaro nell'applicazione. Usa questa opzione solo per account demo.
+                                  </AlertDescription>
+                                </Alert>
+
+                                <FormField
+                                  control={casinoForm.control}
+                                  name="credentials.username"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Username</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={casinoForm.control}
+                                  name="credentials.password"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Password</FormLabel>
+                                      <FormControl>
+                                        <Input type="password" {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                            )}
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={casinoForm.control}
+                          name="gameType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Tipo di Roulette</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Seleziona tipo" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="europeanRoulette">Roulette Europea</SelectItem>
+                                  <SelectItem value="americanRoulette">Roulette Americana</SelectItem>
+                                  <SelectItem value="liveCasino">Casino Live</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                Tipo di roulette da giocare
+                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -1440,60 +1471,57 @@ export default function Settings() {
 
                         <FormField
                           control={casinoForm.control}
-                          name="credentials.password"
+                          name="preferredTable"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Password PlanetWin365</FormLabel>
+                              <FormLabel>Tavolo preferito</FormLabel>
                               <FormControl>
-                                <Input type="password" {...field} />
+                                <Input {...field} />
                               </FormControl>
+                              <FormDescription>
+                                Nome del tavolo preferito (opzionale)
+                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
-                    )}
 
-                    <Alert>
-                      <Rocket className="h-4 w-4" />
-                      <AlertTitle>Modalità Demo</AlertTitle>
-                      <AlertDescription>
-                        L'applicazione è attualmente in modalità demo. Nessuna connessione reale viene effettuata al casinò e nessun denaro viene utilizzato.
-                      </AlertDescription>
-                    </Alert>
-                  </form>
-                </Form>
-              )}
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={() => casinoForm.reset()}
-                disabled={isCasinoLoading || saveCasinoSettings.isPending}
-              >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Ripristina
-              </Button>
-              <Button
-                onClick={casinoForm.handleSubmit(onSubmitCasinoSettings)}
-                disabled={isCasinoLoading || saveCasinoSettings.isPending}
-              >
-                {saveCasinoSettings.isPending ? (
-                  <>
-                    <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
-                    Salvataggio...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Salva impostazioni
-                  </>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => casinoForm.reset()}
+                          disabled={saveCasinoSettings.isPending}
+                        >
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          Ripristina
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={saveCasinoSettings.isPending}
+                        >
+                          {saveCasinoSettings.isPending ? (
+                            <>
+                              <CircleDashed className="mr-2 h-4 w-4 animate-spin" />
+                              Salvando...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="mr-2 h-4 w-4" />
+                              Salva impostazioni
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
                 )}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </PageLayout>
   );
 }
