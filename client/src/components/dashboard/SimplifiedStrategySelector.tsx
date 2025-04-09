@@ -131,221 +131,220 @@ export default function SimplifiedStrategySelector({ onStartBot, currentStrategy
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* Selezione Strategie Salvate */}
-        <div className="mb-4">
-          <Label className="mb-2 block">Strategia Personale</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={showCustomStrategies}
-                className="w-full justify-between"
-                disabled={isActive || isLoading}
-              >
-                {showCustomStrategies && selectedCustomStrategy
-                  ? selectedCustomStrategy.name
-                  : "Seleziona strategia personalizzata"}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
-              <Command>
-                <CommandInput placeholder="Cerca strategia..." />
-                <CommandEmpty>Nessuna strategia trovata.</CommandEmpty>
-                <CommandGroup>
-                  {isLoadingStrategies ? (
-                    <div className="flex items-center justify-center py-6">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    </div>
-                  ) : (savedStrategiesData && savedStrategiesData.length > 0) ? (
-                    savedStrategiesData.map((strategy: Strategy) => (
-                      <CommandItem
-                        key={strategy.id}
-                        value={strategy.name}
-                        onSelect={() => handleCustomStrategySelect(strategy)}
-                        className="flex justify-between"
-                      >
-                        <div className="flex flex-col">
-                          <span>{strategy.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {strategy.type} | {formatBetType(strategy.betType)}
-                          </span>
-                        </div>
-                        {showCustomStrategies && selectedCustomStrategy?.id === strategy.id && (
-                          <Badge variant="outline" className="ml-auto bg-primary/10 text-primary">
-                            Selezionata
-                          </Badge>
-                        )}
-                      </CommandItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-3 text-sm">
-                      Nessuna strategia salvata. Crea una strategia nella pagina "Configurazione Strategie".
-                    </div>
-                  )}
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
-        
-        {/* Separatore */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
+        {isLoadingStrategies ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2">Caricamento strategie...</span>
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              oppure scegli strategia predefinita
-            </span>
-          </div>
-        </div>
-        
-        {/* Strategie predefinite */}
-        <RadioGroup 
-          value={selectedType} 
-          onValueChange={handleStrategySelect}
-          className="space-y-3 mt-3"
-          disabled={isActive || isLoading || showCustomStrategies}
-        >
-          {defaultStrategies.map((strategy) => (
-            <div
-              key={strategy.type}
-              className={`flex items-center space-x-2 border rounded-lg p-3 
-                ${selectedType === strategy.type && !showCustomStrategies ? 'border-primary bg-primary/5' : 'border-input'}
-                ${(isActive || isLoading || showCustomStrategies) ? 'opacity-60' : ''}
-              `}
+        ) : (
+          <>
+            <RadioGroup 
+              value={selectedType} 
+              onValueChange={handleStrategySelect}
+              className="space-y-3"
+              disabled={isActive || isLoading}
             >
-              <RadioGroupItem value={strategy.type} id={strategy.type} />
-              <Label 
-                htmlFor={strategy.type} 
-                className="flex flex-col flex-1 cursor-pointer"
-              >
-                <span className="font-medium">{strategy.name}</span>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground mt-1">
-                    {strategy.description}
-                  </span>
-                  <Badge variant="outline" className="text-xs">
-                    {formatBetType(strategy.betType)}
-                  </Badge>
-                </div>
-              </Label>
-              
-              {currentStrategy?.type === strategy.type && botStatus.status === "active" && (
-                <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200">
-                  Attiva
-                </Badge>
+              {/* Strategie Personalizzate */}
+              {savedStrategiesData && savedStrategiesData.length > 0 && (
+                <>
+                  <div className="text-sm font-medium mb-2">Le tue strategie</div>
+                  {savedStrategiesData.map((strategy: Strategy) => (
+                    <div
+                      key={strategy.id}
+                      className={`flex items-center space-x-2 border rounded-lg p-3 
+                        ${selectedCustomStrategy?.id === strategy.id ? 'border-primary bg-primary/5' : 'border-input'}
+                        ${(isActive || isLoading) ? 'opacity-60' : ''}
+                      `}
+                      onClick={() => handleCustomStrategySelect(strategy)}
+                    >
+                      <RadioGroupItem 
+                        value={`custom-${strategy.id}`} 
+                        id={`custom-${strategy.id}`}
+                        checked={selectedCustomStrategy?.id === strategy.id}
+                      />
+                      <Label 
+                        htmlFor={`custom-${strategy.id}`} 
+                        className="flex flex-col flex-1 cursor-pointer"
+                      >
+                        <span className="font-medium">{strategy.name}</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-muted-foreground mt-1">
+                            {formatBetType(strategy.betType)} | Puntata iniziale: {strategy.initialBet}€
+                          </span>
+                          <Badge variant="outline" className="text-xs capitalize">
+                            {strategy.type}
+                          </Badge>
+                        </div>
+                      </Label>
+                      
+                      {currentStrategy?.id === strategy.id && botStatus.status === "active" && (
+                        <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200">
+                          Attiva
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </>
               )}
-            </div>
-          ))}
-        </RadioGroup>
-        
-        {/* Configurazione Bet Type */}
-        {!showCustomStrategies && selectedType && !isActive && (
-          <div className="mt-4 border rounded-lg p-4">
-            <Label className="text-sm font-medium mb-3 block">Configurazione Puntata</Label>
-            
-            {/* Colore */}
-            {getSelectedStrategy(selectedType)?.betType === "color" && (
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 rounded-full bg-red-500"></div>
-                  <Label htmlFor="red" className="flex-1 text-sm">Rosso</Label>
-                  <RadioGroup 
-                    value="red" 
-                    className="flex"
-                  >
-                    <RadioGroupItem value="red" id="red" />
-                  </RadioGroup>
+              
+              {/* Separatore se ci sono strategie personalizzate */}
+              {savedStrategiesData && savedStrategiesData.length > 0 && (
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Strategie predefinite
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 rounded-full bg-black"></div>
-                  <Label htmlFor="black" className="flex-1 text-sm">Nero</Label>
-                  <RadioGroup 
-                    value="black" 
-                    className="flex"
+              )}
+              
+              {/* Strategie predefinite */}
+              {(!savedStrategiesData || savedStrategiesData.length === 0) && (
+                <div className="text-sm font-medium mb-2">Strategie predefinite</div>
+              )}
+              
+              {defaultStrategies.map((strategy) => (
+                <div
+                  key={strategy.type}
+                  className={`flex items-center space-x-2 border rounded-lg p-3 
+                    ${selectedType === strategy.type && !showCustomStrategies ? 'border-primary bg-primary/5' : 'border-input'}
+                    ${(isActive || isLoading || showCustomStrategies) ? 'opacity-60' : ''}
+                  `}
+                >
+                  <RadioGroupItem value={strategy.type} id={strategy.type} />
+                  <Label 
+                    htmlFor={strategy.type} 
+                    className="flex flex-col flex-1 cursor-pointer"
                   >
-                    <RadioGroupItem value="black" id="black" />
-                  </RadioGroup>
+                    <span className="font-medium">{strategy.name}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground mt-1">
+                        {strategy.description}
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {formatBetType(strategy.betType)}
+                      </Badge>
+                    </div>
+                  </Label>
+                  
+                  {currentStrategy?.type === strategy.type && botStatus.status === "active" && (
+                    <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200">
+                      Attiva
+                    </Badge>
+                  )}
                 </div>
-              </div>
-            )}
-            
-            {/* Pari/Dispari */}
-            {getSelectedStrategy(selectedType)?.betType === "evenOdd" && (
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="even" className="flex-1 text-sm">Pari (Even)</Label>
-                  <RadioGroup 
-                    value="even" 
-                    className="flex"
-                  >
-                    <RadioGroupItem value="even" id="even" />
-                  </RadioGroup>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="odd" className="flex-1 text-sm">Dispari (Odd)</Label>
-                  <RadioGroup 
-                    value="odd" 
-                    className="flex"
-                  >
-                    <RadioGroupItem value="odd" id="odd" />
-                  </RadioGroup>
-                </div>
-              </div>
-            )}
-            
-            {/* Dozzine */}
-            {getSelectedStrategy(selectedType)?.betType === "dozen" && (
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="first-dozen" className="flex-1 text-sm">Prima dozzina (1-12)</Label>
-                  <RadioGroup 
-                    value="first" 
-                    className="flex"
-                  >
-                    <RadioGroupItem value="first" id="first-dozen" />
-                  </RadioGroup>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="second-dozen" className="flex-1 text-sm">Seconda dozzina (13-24)</Label>
-                  <RadioGroup 
-                    value="second" 
-                    className="flex"
-                  >
-                    <RadioGroupItem value="second" id="second-dozen" />
-                  </RadioGroup>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="third-dozen" className="flex-1 text-sm">Terza dozzina (25-36)</Label>
-                  <RadioGroup 
-                    value="third" 
-                    className="flex"
-                  >
-                    <RadioGroupItem value="third" id="third-dozen" />
-                  </RadioGroup>
-                </div>
+              ))}
+            </RadioGroup>
+          
+            {/* Configurazione Bet Type */}
+            {!showCustomStrategies && selectedType && !isActive && (
+              <div className="mt-4 border rounded-lg p-4">
+                <Label className="text-sm font-medium mb-3 block">Configurazione Puntata</Label>
                 
-                <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
-                  <p>Strategia dozzine: Puntata sulle dozzine che non sono uscite per {getSelectedStrategy(selectedType)?.entryCondition || 3} volte consecutive</p>
+                {/* Colore */}
+                {getSelectedStrategy(selectedType)?.betType === "color" && (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 rounded-full bg-red-500"></div>
+                      <Label htmlFor="red" className="flex-1 text-sm">Rosso</Label>
+                      <RadioGroup 
+                        value="red" 
+                        className="flex"
+                      >
+                        <RadioGroupItem value="red" id="red" />
+                      </RadioGroup>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 rounded-full bg-black"></div>
+                      <Label htmlFor="black" className="flex-1 text-sm">Nero</Label>
+                      <RadioGroup 
+                        value="black" 
+                        className="flex"
+                      >
+                        <RadioGroupItem value="black" id="black" />
+                      </RadioGroup>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Pari/Dispari */}
+                {getSelectedStrategy(selectedType)?.betType === "evenOdd" && (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="even" className="flex-1 text-sm">Pari (Even)</Label>
+                      <RadioGroup 
+                        value="even" 
+                        className="flex"
+                      >
+                        <RadioGroupItem value="even" id="even" />
+                      </RadioGroup>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="odd" className="flex-1 text-sm">Dispari (Odd)</Label>
+                      <RadioGroup 
+                        value="odd" 
+                        className="flex"
+                      >
+                        <RadioGroupItem value="odd" id="odd" />
+                      </RadioGroup>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Dozzine */}
+                {getSelectedStrategy(selectedType)?.betType === "dozen" && (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="first-dozen" className="flex-1 text-sm">Prima dozzina (1-12)</Label>
+                      <RadioGroup 
+                        value="first" 
+                        className="flex"
+                      >
+                        <RadioGroupItem value="first" id="first-dozen" />
+                      </RadioGroup>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="second-dozen" className="flex-1 text-sm">Seconda dozzina (13-24)</Label>
+                      <RadioGroup 
+                        value="second" 
+                        className="flex"
+                      >
+                        <RadioGroupItem value="second" id="second-dozen" />
+                      </RadioGroup>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="third-dozen" className="flex-1 text-sm">Terza dozzina (25-36)</Label>
+                      <RadioGroup 
+                        value="third" 
+                        className="flex"
+                      >
+                        <RadioGroupItem value="third" id="third-dozen" />
+                      </RadioGroup>
+                    </div>
+                    
+                    <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
+                      <p>Strategia dozzine: Puntata sulle dozzine che non sono uscite per 3 volte consecutive</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Parametri generali */}
+                <div className="mt-4 pt-3 border-t grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Puntata iniziale</Label>
+                    <p className="text-sm font-medium">{getSelectedStrategy(selectedType)?.initialBet || 1}€</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Stop Loss</Label>
+                    <p className="text-sm font-medium">{getSelectedStrategy(selectedType)?.stopLoss || 50}€</p>
+                  </div>
                 </div>
               </div>
             )}
-            
-            {/* Parametri generali */}
-            <div className="mt-4 pt-3 border-t grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs text-muted-foreground">Puntata iniziale</Label>
-                <p className="text-sm font-medium">{getSelectedStrategy(selectedType)?.initialBet || 1}€</p>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Stop Loss</Label>
-                <p className="text-sm font-medium">{getSelectedStrategy(selectedType)?.stopLoss || 50}€</p>
-              </div>
-            </div>
-          </div>
+          </>
         )}
       </CardContent>
       
