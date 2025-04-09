@@ -779,17 +779,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Funzione per inviare messaggi a tutti i client WebSocket connessi
-  function broadcastToClients(message: any) {
+  // Aggiornata la funzione broadcastToClients per evitare duplicazioni
+  const broadcastToClients = (message: any) => {
     wss.clients.forEach((client) => {
       if (client.readyState === 1) { // WebSocket.OPEN
         client.send(JSON.stringify(message));
       }
     });
-  }
+  };
   
-  // Funzione per gestire i comandi del bot inviati tramite WebSocket
-  async function handleBotCommand(data: any, ws: any) {
+  // Aggiornata la funzione handleBotCommand per evitare duplicazioni
+  const handleBotCommand = async (data: any, ws: any) => {
     try {
       switch (data.command) {
         case 'start':
@@ -847,7 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   
   // Funzione per inviare un aggiornamento sullo stato del bot
-  function sendStatusUpdate(ws: any) {
+  const sendStatusUpdate = (ws: any) => {
     const status = enhancedSikulixConnector.getBotStatus();
     
     ws.send(JSON.stringify({
@@ -950,49 +950,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Helper functions for WebSocket handling
-  function broadcastToClients(message: any) {
-    wss.clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(message));
-      }
-    });
-  }
-
-  async function handleBotCommand(data: any, ws: any) {
-    try {
-      if (data.type === 'startBot' && data.strategy) {
-        const strategy = data.strategy;
-        await storage.saveStrategy(strategy);
-        await sikulixBot.start(strategy);
-        storage.startNewSession();
-        sendStatusUpdate(ws);
-      }
-    } catch (error) {
-      console.error('Errore nell\'esecuzione del comando del bot:', error);
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: 'error',
-          message: error instanceof Error ? error.message : String(error)
-        }));
-      }
-    }
-  }
-
-  function sendStatusUpdate(ws: any) {
-    const status = sikulixBot.getStatus();
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        type: 'botStatus',
-        data: {
-          active: status.active,
-          strategy: status.strategy,
-          startTime: status.active ? new Date().toISOString() : null,
-          stats: storage.getCurrentSession()
-        }
-      }));
-    }
-  }
+  // Rimosso duplicate delle helper functions per WebSocket handling
 
   // Configura eventi globali per la comunicazione tramite WebSocket
   sikulixBot.on('result', async (result) => {

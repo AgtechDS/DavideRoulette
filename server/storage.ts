@@ -180,16 +180,25 @@ export class MemStorage implements IStorage {
   }
   
   async deleteStrategy(id: number): Promise<boolean> {
+    // Mostriamo un log per debug
+    console.log(`Tentativo di eliminare la strategia con ID: ${id}`);
+    console.log(`StrategiesMap contiene le chiavi: ${Array.from(this.strategiesMap.keys())}`);
+    console.log(`Strategia corrente ID: ${this.currentStrategyId}`);
+    
     // Non consentire l'eliminazione della strategia attualmente in uso
     if (this.currentStrategyId === id) {
+      console.log(`Non è possibile eliminare la strategia correntemente in uso (ID: ${id})`);
       return false;
     }
     
     const exists = this.strategiesMap.has(id);
     if (exists) {
       this.strategiesMap.delete(id);
+      console.log(`Strategia con ID ${id} eliminata con successo`);
       return true;
     }
+    
+    console.log(`Strategia con ID ${id} non trovata`);
     return false;
   }
   
