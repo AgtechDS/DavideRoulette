@@ -14,7 +14,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useWebSocketContext } from "@/components/providers/WebSocketProvider";
 
 export default function Dashboard() {
-  const [botStatus, setBotStatus] = useState<BotStatus>({ active: false, strategy: null });
+  const [botStatus, setBotStatus] = useState<BotStatus>({ 
+    status: 'inactive', 
+    strategy: null, 
+    startTime: null, 
+    error: null 
+  });
   const { toast } = useToast();
 
   // Fetch current strategy
@@ -114,7 +119,7 @@ export default function Dashboard() {
         </div>
         
         {/* Bot Status Notification */}
-        {botStatus.active && (
+        {botStatus.status === 'active' && (
           <StatusNotification 
             botStatus={botStatus} 
             onClose={handleStopBot}
