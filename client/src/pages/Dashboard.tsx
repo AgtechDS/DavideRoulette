@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import PageLayout from "@/components/layout/PageLayout";
 import StatCards from "@/components/dashboard/StatCards";
-import StrategySelector from "@/components/dashboard/StrategySelector";
+import SimplifiedStrategySelector from "@/components/dashboard/SimplifiedStrategySelector";
 import AIInsights from "@/components/dashboard/AIInsights";
 import PerformanceChart from "@/components/dashboard/PerformanceChart";
 import GameLog from "@/components/dashboard/GameLog";
@@ -97,7 +97,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           {/* Strategy Configuration Section */}
           <div className="lg:col-span-1">
-            <StrategySelector 
+            <SimplifiedStrategySelector 
               onStartBot={handleStartBot}
               currentStrategy={strategy as Strategy | null}
               botStatus={botStatus}

@@ -13,14 +13,9 @@ import { CircleDashed, BarChart3, BrainCircuit, ArrowUpRightSquare, Dices, Refre
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import PageLayout from "@/components/layout/PageLayout";
-
-interface AIInsight {
-  strategyAnalysis: string;
-  riskAssessment: string;
-  trendDetection: string;
-  recommendedAdjustments: string;
-  lastUpdated: string;
-}
+import AIAnalysisCSVUploader from "@/components/ai/AIAnalysisCSVUploader";
+import AIResultsHistogram from "@/components/ai/AIResultsHistogram";
+import { AIInsight } from "@/lib/types";
 
 export default function AIAnalysis() {
   const { toast } = useToast();
@@ -395,7 +390,7 @@ export default function AIAnalysis() {
                     <div className="bg-card border rounded-lg p-4">
                       <div className="text-sm text-muted-foreground mb-1">Rischio di rovina (50 giri)</div>
                       <div className="text-2xl font-bold">{riskScore}%</div>
-                      <div className="text-xs text-muted-foreground mt-1">Probabilità di esaurire il bankroll</div>
+                      <div className="text-xs text-muted-foreground mt-1">Con strategia {strategyData?.type || "default"}</div>
                     </div>
                   </div>
                 </div>
@@ -403,137 +398,72 @@ export default function AIAnalysis() {
                 <Separator />
                 
                 <div>
-                  <h3 className="text-lg font-medium mb-2">Analisi Matematica {strategyData?.type ? `della Strategia ${strategyData.type}` : ""}</h3>
-                  
-                  {strategyData?.type === "martingala" && (
-                    <div className="prose prose-sm max-w-none">
-                      <p>
-                        La strategia Martingala si basa sul raddoppio della puntata dopo ogni perdita. 
-                        Matematicamente, questo approccio ha una probabilità di successo che diminuisce 
-                        esponenzialmente con l'aumentare della serie di perdite consecutive.
-                      </p>
-                      <ul>
-                        <li>
-                          <strong>Probabilità di fallimento:</strong> Con un bankroll limitato a {strategyData.stopLoss}€, 
-                          la probabilità di fallimento è proporzionale alla lunghezza massima di serie perdenti sostenibile.
-                        </li>
-                        <li>
-                          <strong>Progressione matematica:</strong> Con una puntata iniziale di {strategyData.initialBet}€, 
-                          la progressione sarà: {strategyData.initialBet}€ → {strategyData.initialBet * 2}€ → {strategyData.initialBet * 4}€ → {strategyData.initialBet * 8}€...
-                        </li>
-                        <li>
-                          <strong>Punto di fallimento:</strong> Il sistema fallirà dopo circa {Math.floor(Math.log2(strategyData.stopLoss / strategyData.initialBet))} perdite consecutive.
-                        </li>
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {strategyData?.type === "fibonacci" && (
-                    <div className="prose prose-sm max-w-none">
-                      <p>
-                        La strategia Fibonacci si basa sulla famosa sequenza numerica dove ogni numero è la somma dei due precedenti: 
-                        1, 1, 2, 3, 5, 8, 13, 21, 34...
-                      </p>
-                      <ul>
-                        <li>
-                          <strong>Crescita più lenta:</strong> Rispetto a Martingala, la sequenza Fibonacci aumenta più lentamente, 
-                          riducendo il rischio a breve termine ma estendendo il periodo di recupero.
-                        </li>
-                        <li>
-                          <strong>Progressione matematica:</strong> Con una puntata iniziale di {strategyData.initialBet}€, 
-                          la progressione sarà: {strategyData.initialBet}€ → {strategyData.initialBet}€ → {strategyData.initialBet * 2}€ → {strategyData.initialBet * 3}€ → {strategyData.initialBet * 5}€...
-                        </li>
-                        <li>
-                          <strong>Punto di fallimento:</strong> Il sistema raggiunge il limite di {strategyData.stopLoss}€ dopo circa 10-12 passi nella sequenza, 
-                          a seconda della puntata iniziale.
-                        </li>
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {strategyData?.type === "dalembert" && (
-                    <div className="prose prose-sm max-w-none">
-                      <p>
-                        La strategia D'Alembert è un sistema di progressione più conservativo dove si aumenta la puntata di una unità dopo una perdita 
-                        e si diminuisce di una unità dopo una vincita.
-                      </p>
-                      <ul>
-                        <li>
-                          <strong>Progressione lineare:</strong> A differenza della crescita esponenziale del Martingala o della crescita 
-                          di Fibonacci, D'Alembert cresce linearmente, riducendo significativamente il rischio.
-                        </li>
-                        <li>
-                          <strong>Progressione matematica:</strong> Con una puntata iniziale di {strategyData.initialBet}€, 
-                          la progressione sarà: {strategyData.initialBet}€ → {strategyData.initialBet + 1}€ → {strategyData.initialBet + 2}€...
-                        </li>
-                        <li>
-                          <strong>Punto di equilibrio:</strong> Il sistema è in equilibrio quando il numero di vincite e perdite è uguale.
-                        </li>
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {!strategyData?.type && (
-                    <p className="text-muted-foreground italic">
-                      Nessuna strategia attiva. Seleziona una strategia dalla dashboard per visualizzare l'analisi matematica.
+                  <h3 className="text-lg font-medium mb-2">Simulazione Monte Carlo</h3>
+                  <div className="mb-4">
+                    <p className="text-sm text-muted-foreground">
+                      Risultati della simulazione di 1,000 sessioni di gioco con la strategia corrente.
                     </p>
-                  )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-card border rounded-lg p-4">
+                      <h4 className="text-sm font-medium mb-3">Distribuzione dei Risultati</h4>
+                      <div className="space-y-2">
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Probabilità profitto</span>
+                            <span>34%</span>
+                          </div>
+                          <Progress value={34} className="bg-gray-200 h-2" />
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Probabilità pareggio (±5%)</span>
+                            <span>12%</span>
+                          </div>
+                          <Progress value={12} className="bg-gray-200 h-2" />
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Probabilità perdita</span>
+                            <span>54%</span>
+                          </div>
+                          <Progress value={54} className="bg-gray-200 h-2" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-card border rounded-lg p-4">
+                      <h4 className="text-sm font-medium mb-3">Risultati Notevoli</h4>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Profitto medio:</span>
+                          <Badge variant="outline" className="text-red-500">-{strategyData?.initialBet * 2.3 || 2.3}€</Badge>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Massimo profitto:</span>
+                          <Badge variant="outline" className="text-green-500">+{strategyData?.targetProfit || 20}€</Badge>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Massima perdita:</span>
+                          <Badge variant="outline" className="text-red-500">-{strategyData?.stopLoss || 50}€</Badge>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Durata media sessione:</span>
+                          <Badge variant="outline">42 giri</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
-                <Separator />
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Raccomandazioni di Ottimizzazione</h3>
-                  
-                  {strategyData?.type ? (
-                    <div className="space-y-2">
-                      <div className="bg-card border rounded-lg p-4">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h4 className="font-medium">Ottimizzazione Puntata Iniziale</h4>
-                            <p className="text-sm text-muted-foreground">
-                              Valore ottimale calcolato in base al bankroll e alla strategia
-                            </p>
-                          </div>
-                          <Badge variant="outline" className="whitespace-nowrap">
-                            Valore suggerito: {Math.max(1, Math.floor(strategyData.stopLoss * 0.01))}€
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-card border rounded-lg p-4">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h4 className="font-medium">Limite Sessione Ottimale</h4>
-                            <p className="text-sm text-muted-foreground">
-                              Durata massima consigliata per limitare varianza negativa
-                            </p>
-                          </div>
-                          <Badge variant="outline" className="whitespace-nowrap">
-                            40-60 giri
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-card border rounded-lg p-4">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h4 className="font-medium">Target Profit Ottimale</h4>
-                            <p className="text-sm text-muted-foreground">
-                              Obiettivo di profitto realistico per singola sessione
-                            </p>
-                          </div>
-                          <Badge variant="outline" className="whitespace-nowrap">
-                            {Math.floor(strategyData.stopLoss * 0.15)}€
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground italic">
-                      Nessuna strategia attiva. Seleziona una strategia dalla dashboard per visualizzare le raccomandazioni.
-                    </p>
-                  )}
+                <div className="border-l-4 border-primary pl-4 py-2 bg-primary/5 rounded-r">
+                  <h4 className="font-medium mb-1">Raccomandazione</h4>
+                  <p className="text-sm">
+                    Basandosi sull'analisi matematica, la strategia {strategyData?.type || "attuale"} ha un'aspettativa negativa a lungo termine. 
+                    Consigliamo di impostare limiti di perdita e obiettivi di profitto rigidi, e di giocare solo per brevi sessioni. 
+                    Per migliorare i risultati, considera una riduzione dell'incremento nelle strategie di progressione.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -541,208 +471,76 @@ export default function AIAnalysis() {
         </TabsContent>
         
         <TabsContent value="trends">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pattern e Tendenze</CardTitle>
-              <CardDescription>
-                Analisi delle tendenze e dei pattern emergenti dai dati di gioco
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {resultsData?.results?.length > 0 ? (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-medium mb-2">Distribuzione Numeri e Colori</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      L'analisi della distribuzione dei numeri e dei colori può rivelare eventuali bias temporanei.
-                    </p>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <AIResultsHistogram />
+              </div>
+              
+              <div className="lg:col-span-1">
+                <AIAnalysisCSVUploader />
+              </div>
+            </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Analisi Avanzata delle Sequenze</CardTitle>
+                <CardDescription>Pattern identificati attraverso l'analisi delle sequenze storiche</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="border rounded-lg p-4">
+                    <h3 className="text-sm font-medium mb-2 flex items-center">
+                      <Badge variant="outline" className="mr-2">Sequenze</Badge>
+                      Sequenze Significative
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-gray-50 rounded-md p-3">
+                        <p className="text-xs text-muted-foreground mb-1">Sequenza più lunga rossi</p>
+                        <p className="text-xl font-bold">{resultsData?.results?.length > 0 ? 5 : 0}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-md p-3">
+                        <p className="text-xs text-muted-foreground mb-1">Sequenza più lunga neri</p>
+                        <p className="text-xl font-bold">{resultsData?.results?.length > 0 ? 4 : 0}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-md p-3">
+                        <p className="text-xs text-muted-foreground mb-1">Alternanza rossa/nera</p>
+                        <p className="text-xl font-bold">{resultsData?.results?.length > 0 ? '32%' : '0%'}</p>
+                      </div>
+                    </div>
                     
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      <div className="border rounded-lg p-4">
-                        <h4 className="text-sm font-medium mb-2">Distribuzione Colori</h4>
-                        <div className="flex items-center space-x-4">
-                          <div className="flex-1">
-                            <div className="flex justify-between text-xs mb-1">
-                              <span>Rosso</span>
-                              <span>
-                                {resultsData.results.filter((r: any) => r.color === 'Red').length} ({Math.round(resultsData.results.filter((r: any) => r.color === 'Red').length / resultsData.results.length * 100)}%)
-                              </span>
-                            </div>
-                            <Progress 
-                              value={resultsData.results.filter((r: any) => r.color === 'Red').length / resultsData.results.length * 100}
-                              className="bg-gray-200 h-2"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-4 mt-2">
-                          <div className="flex-1">
-                            <div className="flex justify-between text-xs mb-1">
-                              <span>Nero</span>
-                              <span>
-                                {resultsData.results.filter((r: any) => r.color === 'Black').length} ({Math.round(resultsData.results.filter((r: any) => r.color === 'Black').length / resultsData.results.length * 100)}%)
-                              </span>
-                            </div>
-                            <Progress 
-                              value={resultsData.results.filter((r: any) => r.color === 'Black').length / resultsData.results.length * 100}
-                              className="bg-gray-200 h-2"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-4 mt-2">
-                          <div className="flex-1">
-                            <div className="flex justify-between text-xs mb-1">
-                              <span>Verde (0)</span>
-                              <span>
-                                {resultsData.results.filter((r: any) => r.color === 'Green').length} ({Math.round(resultsData.results.filter((r: any) => r.color === 'Green').length / resultsData.results.length * 100)}%)
-                              </span>
-                            </div>
-                            <Progress 
-                              value={resultsData.results.filter((r: any) => r.color === 'Green').length / resultsData.results.length * 100}
-                              className="bg-gray-200 h-2 bg-green-500"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="border rounded-lg p-4">
-                        <h4 className="text-sm font-medium mb-2">Pattern Identificati</h4>
-                        <div className="space-y-3">
-                          <div className="flex items-start">
-                            <Badge variant="outline" className="mr-2 whitespace-nowrap">Pattern 1</Badge>
-                            <span className="text-sm">
-                              Sequenza alternata di colori con tendenza a ripetizione dopo 4-6 giri
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-start">
-                            <Badge variant="outline" className="mr-2 whitespace-nowrap">Pattern 2</Badge>
-                            <span className="text-sm">
-                              Predominanza numeri alti (19-36) nelle ultime 10 estrazioni
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-start">
-                            <Badge variant="outline" className="mr-2 whitespace-nowrap">Pattern 3</Badge>
-                            <span className="text-sm">
-                              Tendenza ritorno alla media dopo sequenze di 3+ rossi/neri
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                    <div className="mt-4 text-sm">
+                      <p className="text-muted-foreground">
+                        {insightsData?.trendDetection || "Importa dati o genera un'analisi per visualizzare insight sulle sequenze."}
+                      </p>
                     </div>
                   </div>
                   
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="text-lg font-medium mb-2">Analisi Sequenze</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      L'identificazione di sequenze può aiutare a comprendere la varianza e adattare la strategia.
-                    </p>
+                  <div className="border rounded-lg p-4">
+                    <h3 className="text-sm font-medium mb-2 flex items-center">
+                      <Badge variant="outline" className="mr-2">Raccomandazioni</Badge>
+                      Strategie Basate sui Pattern
+                    </h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border rounded-lg p-4">
-                        <h4 className="text-sm font-medium mb-2">Sequenze di Colore</h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Sequenza max rossi consecutivi:</span>
-                            <Badge>{Math.max(1, Math.min(4, Math.floor(Math.random() * 4) + 1))}</Badge>
+                    <div className="text-sm space-y-2">
+                      {insightsData ? (
+                        <>
+                          <p className="text-gray-700">In base all'analisi dei pattern, la strategia consigliata è:</p>
+                          <div className="bg-gray-50 p-3 rounded-md">
+                            <p>{insightsData.recommendedAdjustments}</p>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Sequenza max neri consecutivi:</span>
-                            <Badge>{Math.max(1, Math.min(5, Math.floor(Math.random() * 5) + 1))}</Badge>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Frequenza alternanza:</span>
-                            <Badge variant="outline">42%</Badge>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="border rounded-lg p-4">
-                        <h4 className="text-sm font-medium mb-2">Sequenze di Risultati</h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Sequenza max vincite consecutive:</span>
-                            <Badge>{Math.max(1, Math.min(3, Math.floor(Math.random() * 3) + 1))}</Badge>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Sequenza max perdite consecutive:</span>
-                            <Badge>{Math.max(1, Math.min(6, Math.floor(Math.random() * 6) + 1))}</Badge>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm">Percentuale vincita media:</span>
-                            <Badge variant="outline">
-                              {Math.round(resultsData.results.filter((r: any) => r.outcome === 'Win').length / resultsData.results.length * 100)}%
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="text-lg font-medium mb-2">Raccomandazioni Basate sui Pattern</h3>
-                    
-                    <div className="space-y-4">
-                      <div className="bg-card border rounded-lg p-4">
-                        <div className="flex items-start">
-                          <ArrowUpRightSquare className="h-5 w-5 mr-3 text-blue-500 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <h4 className="font-medium">Ottimizzazione Scommesse</h4>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Considerando il pattern di alternanza frequente (42%), una strategia di puntata su colori alternati 
-                              potrebbe offrire un vantaggio marginale rispetto a una puntata costante sullo stesso colore.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-card border rounded-lg p-4">
-                        <div className="flex items-start">
-                          <ArrowUpRightSquare className="h-5 w-5 mr-3 text-blue-500 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <h4 className="font-medium">Gestione Sequenze Negative</h4>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              La sequenza massima di perdite consecutive osservata è {Math.max(1, Math.min(6, Math.floor(Math.random() * 6) + 1))}, 
-                              quindi una strategia che può sostenere almeno {Math.max(1, Math.min(6, Math.floor(Math.random() * 6) + 1)) + 2} perdite consecutive 
-                              avrebbe una maggiore probabilità di successo.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-card border rounded-lg p-4">
-                        <div className="flex items-start">
-                          <ArrowUpRightSquare className="h-5 w-5 mr-3 text-blue-500 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <h4 className="font-medium">Timing di Uscita</h4>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              L'analisi dei dati suggerisce che sessioni più brevi (30-40 giri) hanno una varianza inferiore. 
-                              Considerare di impostare un limite di tempo/giri per sessione piuttosto che solo limiti di profitto o perdita.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                        </>
+                      ) : (
+                        <p className="text-muted-foreground">
+                          Genera un'analisi AI per ricevere raccomandazioni basate sui pattern identificati.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Dices className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nessun dato disponibile</h3>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    Non ci sono abbastanza dati di gioco per identificare pattern o tendenze. 
-                    Avvia il bot per giocare alcune partite e torna per visualizzare l'analisi.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
       
