@@ -221,7 +221,7 @@ davide-roulette/
 
 ## Collaboratori
 
-- Davide (Ideatore e Proprietario del Progetto)
+- Agtechdesigne (Ideatore (codiceMadre) e Proprietario del Progetto)
 - Team di Sviluppo
 
 ## Licenza
