@@ -4,11 +4,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { PlayCircle, StopCircle, Loader2, ChevronsUpDown } from "lucide-react";
+import { PlayCircle, StopCircle, Loader2, ChevronsUpDown, MoreHorizontal, Trash2, Copy, Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { useToast } from "@/hooks/use-toast";
 
 // Importiamo i tipi dalla definizione dello schema condiviso
 import { Strategy, BotStatus } from "@/lib/types";
@@ -104,6 +105,8 @@ export default function SimplifiedStrategySelector({ onStartBot, currentStrategy
     setShowCustomStrategies(false);
     setSelectedCustomStrategy(null);
   };
+  
+  const { toast } = useToast();
   
   const handleCustomStrategySelect = (strategy: Strategy) => {
     setSelectedCustomStrategy(strategy);
@@ -219,7 +222,41 @@ export default function SimplifiedStrategySelector({ onStartBot, currentStrategy
                     htmlFor={strategy.type} 
                     className="flex flex-col flex-1 cursor-pointer"
                   >
-                    <span className="font-medium">{strategy.name}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{strategy.name}</span>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="ghost" size="icon" disabled={isActive || isLoading}>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-48 p-0">
+                          <Command>
+                            <CommandGroup>
+                              <CommandItem className="cursor-pointer" onSelect={() => handleStrategySelect(strategy.type)}>
+                                <Check className="h-4 w-4 mr-2" />
+                                <span>Seleziona</span>
+                              </CommandItem>
+                              <CommandItem className="cursor-pointer">
+                                <Copy className="h-4 w-4 mr-2" />
+                                <span>Duplica e modifica</span>
+                              </CommandItem>
+                              <CommandItem 
+                                className="cursor-pointer text-red-500"
+                                onSelect={() => toast({
+                                  title: "Info",
+                                  description: "Le strategie predefinite non possono essere eliminate",
+                                  variant: "default"
+                                })}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                <span>Elimina</span>
+                              </CommandItem>
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-muted-foreground mt-1">
                         {strategy.description}
