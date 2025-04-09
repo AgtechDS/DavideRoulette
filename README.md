@@ -13,7 +13,7 @@ Davide Roulette è un sistema modulare che integra:
 ## Caratteristiche Principali
 
 ### Dashboard
-- Configurazione dettagliata delle strategie (Martingala, Fibonacci, D'Alembert, Custom)
+- Selezione semplificata del tipo di strategia (senza dettagli per evitare confusione)
 - Monitoraggio delle prestazioni in tempo reale con WebSocket
 - Storico completo dei risultati di gioco
 - Log di attività del bot con aggiornamenti istantanei
@@ -164,14 +164,14 @@ npm run dev
 ## Utilizzo
 
 ### Configurazione Strategie
-1. Vai alla sezione "Configurazione Strategie"
+1. Vai alla sezione "Configurazione Strategie" 
 2. Seleziona una delle strategie predefinite o crea una personalizzata
-3. Imposta i parametri (puntata iniziale, progressione, stop-loss, ecc.)
+3. Imposta i parametri dettagliati (puntata iniziale, progressione, stop-loss, ecc.)
 4. Salva la strategia
 
 ### Avvio del Bot
 1. Vai alla dashboard principale
-2. Seleziona la strategia desiderata
+2. Seleziona semplicemente il tipo di strategia da usare (senza dettagli per evitare confusione)
 3. Clicca su "Avvia Bot"
 4. Monitora in tempo reale l'andamento tramite i vari indicatori
 
