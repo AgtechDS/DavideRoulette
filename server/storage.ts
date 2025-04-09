@@ -24,6 +24,7 @@ export interface IStorage {
   getStrategy(id: number): Promise<Strategy | undefined>;
   getStrategies(): Promise<Strategy[]>;
   getCurrentStrategy(): Strategy | null;
+  deleteStrategy(id: number): Promise<boolean>;
   
   // Game result operations
   addGameResult(result: GameResult): Promise<GameResult>;
@@ -176,6 +177,20 @@ export class MemStorage implements IStorage {
   getCurrentStrategy(): Strategy | null {
     if (this.currentStrategyId === null) return null;
     return this.strategiesMap.get(this.currentStrategyId) || null;
+  }
+  
+  async deleteStrategy(id: number): Promise<boolean> {
+    // Non consentire l'eliminazione della strategia attualmente in uso
+    if (this.currentStrategyId === id) {
+      return false;
+    }
+    
+    const exists = this.strategiesMap.has(id);
+    if (exists) {
+      this.strategiesMap.delete(id);
+      return true;
+    }
+    return false;
   }
   
   // ----- Game Result Methods -----

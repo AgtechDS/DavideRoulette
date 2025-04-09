@@ -30,6 +30,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ strategies });
   });
 
+  // Get a strategy by ID
+  app.get("/api/strategy/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID non valido" });
+      }
+      
+      const strategy = await storage.getStrategy(id);
+      if (!strategy) {
+        return res.status(404).json({ message: "Strategia non trovata" });
+      }
+      
+      res.json(strategy);
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ message: errorMessage });
+    }
+  });
+
   // Save a strategy
   app.post("/api/strategy", async (req, res) => {
     try {
@@ -39,6 +59,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       res.status(400).json({ message: errorMessage });
+    }
+  });
+  
+  // Delete a strategy
+  app.delete("/api/strategy/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID non valido" });
+      }
+      
+      const success = await storage.deleteStrategy(id);
+      if (!success) {
+        return res.status(404).json({ message: "Strategia non trovata" });
+      }
+      
+      res.json({ success: true, message: "Strategia eliminata con successo" });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ message: errorMessage });
+    }
+  });
+  
+  // Analyze a strategy using AI
+  app.post("/api/strategy/analyze", async (req, res) => {
+    try {
+      const strategy = strategySchema.parse(req.body);
+      
+      // Analyze strategy using OpenAI
+      const gameResults = storage.getAllGameResults();
+      const analysis = await generateAIInsights(gameResults, strategy);
+      
+      // Save insights
+      await storage.saveAIInsights(analysis);
+      
+      res.json({ success: true, analysis });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ message: errorMessage });
     }
   });
 

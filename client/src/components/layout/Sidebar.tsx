@@ -4,7 +4,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { 
   Dice5, Settings, BarChart, Brain, 
-  Activity, X, LayoutDashboard 
+  Activity, X, LayoutDashboard, 
+  Sliders, Target
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -17,6 +18,7 @@ export default function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarPr
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+    { href: '/strategie', label: 'Strategie', icon: <Target className="w-5 h-5" /> },
     { href: '/automazione', label: 'Automazione', icon: <Dice5 className="w-5 h-5" /> },
     { href: '/statistiche', label: 'Statistiche', icon: <BarChart className="w-5 h-5" /> },
     { href: '/ai', label: 'AI Analysis', icon: <Brain className="w-5 h-5" /> },

@@ -8,6 +8,7 @@ import GameAutomation from "@/pages/GameAutomation";
 import StatisticsReports from "@/pages/StatisticsReports";
 import AIAnalysis from "@/pages/AIAnalysis";
 import Settings from "@/pages/Settings";
+import StrategyConfiguration from "@/pages/StrategyConfiguration";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 
@@ -28,6 +29,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
+      <Route path="/strategie" component={StrategyConfiguration} />
       <Route path="/automazione" component={GameAutomation} />
       <Route path="/statistiche" component={StatisticsReports} />
       <Route path="/ai" component={AIAnalysis} />

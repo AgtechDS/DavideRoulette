@@ -44,13 +44,41 @@ export const strategies = pgTable("strategies", {
 // Strategy validation schema for API
 export const strategySchema = z.object({
   id: z.number().optional(),
+  name: z.string().optional(),
   type: z.enum(["martingala", "fibonacci", "dalembert", "custom"]),
   initialBet: z.number().min(1, "Initial bet must be at least 1"),
   maxLosses: z.number().min(1, "Max losses must be at least 1"),
-  betType: z.enum(["color", "evenOdd"]),
+  betType: z.enum(["color", "evenOdd", "dozen"]).default("color"),
   targetProfit: z.number().min(1, "Target profit must be at least 1"),
   stopLoss: z.number().min(1, "Stop loss must be at least 1"),
   sessionDuration: z.number().min(5, "Session duration must be at least 5 minutes"),
+  
+  // Advanced settings for Roulette Speed LIVE
+  gameMode: z.enum(["standard", "speed_live"]).default("standard").optional(),
+  automaticMode: z.boolean().default(false).optional(),
+  targetDozen: z.enum(["first", "second", "third"]).optional(),
+  entryCondition: z.number().min(1).default(3).optional(),
+  maxConsecutiveBets: z.number().min(1).default(17).optional(),
+  resetStrategy: z.enum(["after_win", "after_loss", "manual"]).default("after_win").optional(),
+  
+  // Multi-account options
+  multiAccountMode: z.boolean().default(false).optional(),
+  accountCount: z.number().min(1).max(10).default(1).optional(),
+  accounts: z.array(z.object({
+    id: z.string(),
+    username: z.string().optional(),
+    password: z.string().optional()
+  })).optional(),
+  
+  // Alarm settings
+  alarmEnabled: z.boolean().default(false).optional(),
+  alarmChannel: z.enum(["email", "telegram", "log"]).default("log").optional(),
+  alarmContactInfo: z.string().optional(),
+  
+  // AI Analysis
+  useAIAnalysis: z.boolean().default(false).optional(),
+  datasetImported: z.boolean().default(false).optional(),
+  
   createdAt: z.string().optional(),
 });
 

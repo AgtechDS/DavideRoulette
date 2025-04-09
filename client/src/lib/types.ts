@@ -1,14 +1,41 @@
 // Strategy definition
 export interface Strategy {
   id?: number;
+  name?: string;
   type: "martingala" | "fibonacci" | "dalembert" | "custom";
   initialBet: number;
   maxLosses: number;
-  betType: "color" | "evenOdd";
+  betType: "color" | "evenOdd" | "dozen";
   targetProfit: number;
   stopLoss: number;
   sessionDuration: number;
   createdAt?: string;
+  
+  // Advanced settings for Roulette Speed LIVE
+  gameMode?: "standard" | "speed_live";
+  automaticMode?: boolean;
+  targetDozen?: "first" | "second" | "third";
+  entryCondition?: number;
+  maxConsecutiveBets?: number;
+  resetStrategy?: "after_win" | "after_loss" | "manual";
+  
+  // Multi-account options
+  multiAccountMode?: boolean;
+  accountCount?: number;
+  accounts?: Array<{
+    id: string;
+    username?: string;
+    password?: string;
+  }>;
+  
+  // Alarm settings
+  alarmEnabled?: boolean;
+  alarmChannel?: "email" | "telegram" | "log";
+  alarmContactInfo?: string;
+  
+  // AI Analysis
+  useAIAnalysis?: boolean;
+  datasetImported?: boolean;
 }
 
 // Bot status
