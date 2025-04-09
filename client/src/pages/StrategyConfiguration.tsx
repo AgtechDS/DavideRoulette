@@ -103,6 +103,7 @@ export default function StrategyConfiguration() {
   };
 
   const handleDeleteStrategy = (id: number) => {
+    console.log("Richiesta eliminazione strategia con ID:", id);
     setStrategyToDelete(id);
     setShowDeleteDialog(true);
   };
@@ -110,12 +111,30 @@ export default function StrategyConfiguration() {
   const confirmDeleteStrategy = async () => {
     if (!strategyToDelete) return;
     
+    console.log("Conferma eliminazione strategia con ID:", strategyToDelete);
+    
     try {
+      // Prima otteniamo tutte le strategie per vedere se l'ID è valido
+      const strategiesRes = await fetch("/api/strategy");
+      const strategiesData = await strategiesRes.json();
+      console.log("Strategie disponibili:", strategiesData.strategies);
+      
+      // Verifichiamo che l'ID esista
+      const strategyExists = strategiesData.strategies.some((s: any) => s.id === strategyToDelete);
+      
+      if (!strategyExists) {
+        throw new Error(`Strategia con ID ${strategyToDelete} non trovata!`);
+      }
+      
+      // Procediamo con l'eliminazione
       const res = await fetch(`/api/strategy/${strategyToDelete}`, {
         method: "DELETE",
       });
       
-      if (!res.ok) throw new Error("Impossibile eliminare la strategia");
+      const responseData = await res.json();
+      console.log("Risposta eliminazione:", responseData);
+      
+      if (!res.ok) throw new Error(`Impossibile eliminare la strategia: ${responseData.message || ''}`);
       
       toast({
         title: "Strategia Eliminata",
@@ -124,6 +143,7 @@ export default function StrategyConfiguration() {
       
       refetchStrategies();
     } catch (error: any) {
+      console.error("Errore durante l'eliminazione:", error);
       toast({
         title: "Errore",
         description: error.message,
