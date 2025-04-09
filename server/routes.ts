@@ -27,10 +27,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   wss.on('connection', (ws) => {
     console.log('Client WebSocket connesso');
     
-    // Invia lo stato iniziale
-    const status = sikulixBot.getStatus();
-    const logs = sikulixBot.getLogs();
-    const gameResults = storage.getAllGameResults();
+    // Invia lo stato iniziale immediatamente
+    sendStatusUpdate(ws);
+    sendAllLogsUpdate(ws);
+    sendAllResultsUpdate(ws);
     
     // Gestisci i messaggi in entrata
     ws.on('message', (message) => {
@@ -44,8 +44,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sikulixBot.stop().then(() => {
             sendStatusUpdate(ws);
           });
-        } else if (data.type === 'request_status') {
+        } else if (data.type === 'request_status' || data.type === 'getStatus') {
           sendStatusUpdate(ws);
+        } else if (data.type === 'getLogs') {
+          sendAllLogsUpdate(ws);
+        } else if (data.type === 'getResults') {
+          sendAllResultsUpdate(ws);
         } else {
           console.log('Tipo di messaggio sconosciuto:', data.type);
         }
@@ -850,11 +854,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const sendStatusUpdate = (ws: any) => {
     const status = enhancedSikulixConnector.getBotStatus();
     
-    ws.send(JSON.stringify({
-      type: 'status_update',
-      data: status,
-      timestamp: new Date().toISOString()
-    }));
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'botStatus',
+        data: status,
+        timestamp: new Date().toISOString()
+      }));
+    }
+  }
+  
+  const sendAllLogsUpdate = (ws: any) => {
+    const logs = sikulixBot.getLogs();
+    
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'allLogs',
+        data: logs,
+        timestamp: new Date().toISOString()
+      }));
+    }
+  }
+  
+  const sendAllResultsUpdate = (ws: any) => {
+    const results = storage.getAllGameResults();
+    
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'allResults',
+        data: results,
+        timestamp: new Date().toISOString()
+      }));
+    }
   }
   
   // Aggiungi endpoint per la gestione delle risorse di SikuliX

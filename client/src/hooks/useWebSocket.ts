@@ -59,59 +59,70 @@ export function useWebSocket(): WebSocketHook {
   
   // Connection establishment
   useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
-    const socket = new WebSocket(wsUrl);
-    socketRef.current = socket;
-    
-    socket.onopen = () => {
-      console.log('WebSocket connection established');
-      setIsConnected(true);
+    try {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      const wsUrl = `${protocol}//${host}/ws`;
       
-      // Request initial data
-      socket.send(JSON.stringify({ type: 'getStatus' }));
-      socket.send(JSON.stringify({ type: 'getLogs' }));
-      socket.send(JSON.stringify({ type: 'getResults' }));
-    };
-    
-    socket.onclose = () => {
-      console.log('WebSocket connection closed');
-      setIsConnected(false);
-    };
-    
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-    
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        setLastMessage(data);
+      console.log('Tentativo di connessione WebSocket a:', wsUrl);
+      
+      const socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
+      
+      socket.onopen = () => {
+        console.log('WebSocket connection established');
+        setIsConnected(true);
+        setError(null);
         
-        // Handle different message types
-        if (data.type === 'botStatus') {
-          setBotStatus(data.data);
-        } else if (data.type === 'gameResult') {
-          setGameResults(prev => [data.data, ...prev].slice(0, 100)); // Keep last 100 results
-        } else if (data.type === 'botLog') {
-          setBotLogs(prev => [...prev, data.data].slice(-100)); // Keep last 100 logs
-        } else if (data.type === 'allLogs') {
-          setBotLogs(data.data || []);
-        } else if (data.type === 'allResults') {
-          setGameResults(data.data || []);
+        // Request initial data
+        socket.send(JSON.stringify({ type: 'getStatus' }));
+        socket.send(JSON.stringify({ type: 'getLogs' }));
+        socket.send(JSON.stringify({ type: 'getResults' }));
+      };
+      
+      socket.onclose = () => {
+        console.log('WebSocket connection closed');
+        setIsConnected(false);
+      };
+      
+      socket.onerror = (event) => {
+        console.error('WebSocket error:', event);
+        setError('Errore di connessione WebSocket.');
+      };
+      
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          setLastMessage(data);
+          
+          // Handle different message types
+          if (data.type === 'botStatus') {
+            setBotStatus(data.data);
+          } else if (data.type === 'gameResult') {
+            setGameResults(prev => [data.data, ...prev].slice(0, 100)); // Keep last 100 results
+          } else if (data.type === 'botLog') {
+            setBotLogs(prev => [...prev, data.data].slice(-100)); // Keep last 100 logs
+          } else if (data.type === 'allLogs') {
+            setBotLogs(data.data || []);
+          } else if (data.type === 'allResults') {
+            setGameResults(data.data || []);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
         }
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-      }
-    };
-    
-    // Cleanup on unmount
-    return () => {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.close();
-      }
-    };
+      };
+      
+      // Cleanup on unmount
+      return () => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+          socketRef.current.close();
+        }
+      };
+    } catch (error) {
+      console.error('Error creating WebSocket connection:', error);
+      setError('Failed to connect to WebSocket server.');
+      return () => {};
+    }
   }, []);
   
   // Send message function
