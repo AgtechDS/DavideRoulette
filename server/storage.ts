@@ -185,10 +185,10 @@ export class MemStorage implements IStorage {
     console.log(`StrategiesMap contiene le chiavi: ${Array.from(this.strategiesMap.keys())}`);
     console.log(`Strategia corrente ID: ${this.currentStrategyId}`);
     
-    // Non consentire l'eliminazione della strategia attualmente in uso
+    // Se è la strategia attualmente in uso, resetta la strategia corrente
     if (this.currentStrategyId === id) {
-      console.log(`Non è possibile eliminare la strategia correntemente in uso (ID: ${id})`);
-      return false;
+      console.log(`Reset della strategia corrente prima di eliminare (ID: ${id})`);
+      this.currentStrategyId = null;
     }
     
     const exists = this.strategiesMap.has(id);
