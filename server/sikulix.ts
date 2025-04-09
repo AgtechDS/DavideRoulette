@@ -5,10 +5,15 @@
  * which uses image recognition to automate interactions with a Casino's Java application.
  */
 
-import { spawn, ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
-import path from 'path';
+import { ChildProcess } from 'child_process';
 import { Strategy } from '@shared/schema';
+import { fileURLToPath } from 'url';
+import * as path from 'path';
+
+// Ottieni il percorso corrente usando il modulo ES
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class SikulixBot extends EventEmitter {
   private process: ChildProcess | null = null;
@@ -16,12 +21,12 @@ class SikulixBot extends EventEmitter {
   private strategy: Strategy | null = null;
   private logs: Array<{ timestamp: string; type: string; message: string }> = [];
   private lastResult: { number: number; color: string; isEven: boolean } | null = null;
-
+  private simulationInterval: NodeJS.Timeout | null = null;
+  
   constructor() {
     super();
-    this.addLog('info', 'SikuliX bot initialized. Ready to start.');
   }
-
+  
   /**
    * Start the SikuliX bot with the given strategy
    */
@@ -29,66 +34,59 @@ class SikulixBot extends EventEmitter {
     if (this.running) {
       throw new Error('Bot is already running');
     }
-
-    this.strategy = strategy;
-    this.running = true;
-
-    this.addLog('info', `Starting bot with ${strategy.type} strategy`);
-    this.addLog('info', `Initial bet: €${strategy.initialBet.toFixed(2)}`);
-    this.addLog('info', `Bet type: ${strategy.betType}`);
-
+    
     try {
-      // In a real implementation, this would start the SikuliX process
-      // For demo purposes, we'll simulate the process
+      this.running = true;
+      this.strategy = strategy;
+      
+      this.addLog('info', `Starting SikuliX bot with ${strategy.type} strategy`);
+      this.addLog('info', `Target: ${strategy.betType}, Initial bet: ${strategy.initialBet}`);
+      
+      // In a real implementation, this would launch the SikuliX process
+      // For demo purposes, we'll simulate the bot's behavior
       this.simulateBotProcess();
       
-      this.emit('started', {
-        strategy: this.strategy,
-        timestamp: new Date().toISOString()
-      });
-      
       return true;
-    } catch (error: unknown) {
+    } catch (error) {
+      this.addLog('error', `Failed to start bot: ${error instanceof Error ? error.message : String(error)}`);
       this.running = false;
       this.strategy = null;
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.addLog('error', `Failed to start bot: ${errorMessage}`);
-      throw error;
+      return false;
     }
   }
-
+  
   /**
    * Stop the SikuliX bot
    */
   async stop(): Promise<boolean> {
     if (!this.running) {
-      throw new Error('Bot is not running');
+      return true; // Already stopped
     }
-
-    this.addLog('info', 'Stopping bot...');
-
+    
     try {
-      // In a real implementation, this would terminate the SikuliX process
+      this.addLog('info', 'Stopping bot');
+      
+      if (this.simulationInterval) {
+        clearInterval(this.simulationInterval);
+        this.simulationInterval = null;
+      }
+      
       if (this.process) {
+        // In a real implementation, this would terminate the process
         this.process.kill();
         this.process = null;
       }
       
       this.running = false;
+      this.addLog('success', 'Bot stopped successfully');
       
-      this.emit('stopped', {
-        timestamp: new Date().toISOString()
-      });
-      
-      this.addLog('info', 'Bot stopped successfully');
       return true;
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.addLog('error', `Error stopping bot: ${errorMessage}`);
-      throw error;
+    } catch (error) {
+      this.addLog('error', `Failed to stop bot: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
     }
   }
-
+  
   /**
    * Get the current status of the bot
    */
@@ -98,132 +96,212 @@ class SikulixBot extends EventEmitter {
       strategy: this.strategy
     };
   }
-
+  
   /**
    * Get all logs
    */
   getLogs(): Array<{ timestamp: string; type: string; message: string }> {
     return this.logs;
   }
-
+  
   /**
    * Clear all logs
    */
   clearLogs(): void {
     this.logs = [];
-    this.addLog('info', 'Logs cleared');
   }
-
+  
   /**
    * Add a log entry
    */
   addLog(type: string, message: string): void {
-    const timestamp = new Date().toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
+    const log = {
+      timestamp: new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }),
+      type,
+      message
+    };
     
-    this.logs.push({ timestamp, type, message });
-    
-    // Keep log size reasonable
-    if (this.logs.length > 1000) {
-      this.logs.shift();
-    }
-    
-    this.emit('log', { timestamp, type, message });
+    this.logs.push(log);
+    this.emit('log', log);
   }
-
+  
   /**
    * Simulate the bot process for demo purposes
    */
   private simulateBotProcess(): void {
-    // This simulates what would be a real SikuliX process
-    const interval = setInterval(() => {
-      if (!this.running) {
-        clearInterval(interval);
+    const strategy = this.strategy;
+    if (!strategy) return;
+    
+    let currentBet = strategy.initialBet;
+    let consecutiveLosses = 0;
+    let round = 0;
+    
+    // Simulate rounds every few seconds
+    this.simulationInterval = setInterval(() => {
+      round++;
+      if (round > 25 || (strategy.maxBets && round >= strategy.maxBets)) {
+        // Automatically stop after a set number of rounds
+        this.stop();
         return;
       }
-
-      // Simulate bet placement
-      const betAmount = this.calculateNextBet();
-      let betChoice: string;
       
-      if (this.strategy?.betType === 'color') {
-        betChoice = Math.random() > 0.5 ? 'Red' : 'Black';
-      } else {
-        // For evenOdd strategy
-        betChoice = Math.random() > 0.5 ? 'Even' : 'Odd';
-      }
+      this.addLog('info', `Round ${round}: Placing bet of ${currentBet}€ on ${strategy.betType}`);
       
-      this.addLog('info', `Bot placed bet: €${betAmount.toFixed(2)} on ${betChoice}`);
-
-      // Simulate result after a delay
+      // Generate random result
       setTimeout(() => {
-        if (!this.running) return;
-
-        // Generate a random roulette result
-        const number = Math.floor(Math.random() * 37); // 0-36
-        const isEven = number > 0 && number % 2 === 0;
-        let color = 'Black';
+        const result = this.generateRandomResult();
+        this.lastResult = result;
         
-        if (number === 0) {
-          color = 'Green';
-        } else if ([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36].includes(number)) {
-          color = 'Red';
-        }
-
-        this.lastResult = { number, color, isEven };
-        this.addLog('info', `Result detected: ${number} (${color})`);
-
-        // Determine win/loss
-        let win = false;
-        if (this.strategy?.betType === 'color') {
-          win = (betChoice === color);
-        } else if (this.strategy?.betType === 'evenOdd') {
-          // For even/odd bets, we determine if bet was on even or odd from betChoice
-          const betOnEven = betChoice === 'Even';
-          win = (betOnEven === isEven) && number !== 0;
-        }
-
-        if (win) {
-          this.addLog('success', `Bet won. Resetting to initial bet amount.`);
+        this.addLog('info', `Result: ${result.number} (${result.color})`);
+        
+        // Determine if bet won
+        const won = this.checkWin(result, strategy);
+        
+        if (won) {
+          const profit = this.calculateProfit(currentBet, strategy.betType);
+          this.addLog('success', `Win! Profit: ${profit}€`);
+          
+          // Reset consecutive losses
+          consecutiveLosses = 0;
+          
+          // Report result to listeners
           this.emit('result', {
-            number,
-            color,
-            betAmount,
-            betType: this.strategy?.betType === 'color' ? `Color (${betChoice})` : `${betChoice}`,
+            number: result.number,
+            color: result.color,
+            betType: strategy.betType,
+            betAmount: currentBet,
             outcome: 'Win',
-            profit: betAmount,
-            timestamp: new Date().toISOString()
+            profit
           });
+          
+          // Reset bet amount based on strategy
+          currentBet = strategy.initialBet;
         } else {
-          this.addLog('warning', `Bet lost. Applying ${this.strategy?.type} progression.`);
+          this.addLog('warn', `Loss! -${currentBet}€`);
+          consecutiveLosses++;
+          
+          // Report result to listeners
           this.emit('result', {
-            number,
-            color,
-            betAmount,
-            betType: this.strategy?.betType === 'color' ? `Color (${betChoice})` : `${betChoice}`,
-            outcome: 'Loss',
-            timestamp: new Date().toISOString()
+            number: result.number,
+            color: result.color,
+            betType: strategy.betType,
+            betAmount: currentBet,
+            outcome: 'Loss'
           });
+          
+          // Increase bet amount based on strategy
+          if (strategy.type === 'martingala') {
+            currentBet = currentBet * 2;
+          } else if (strategy.type === 'fibonacci') {
+            // Simple Fibonacci implementation for demo
+            if (consecutiveLosses <= 1) {
+              currentBet = strategy.initialBet;
+            } else if (consecutiveLosses === 2) {
+              currentBet = strategy.initialBet * 2;
+            } else if (consecutiveLosses === 3) {
+              currentBet = strategy.initialBet * 3;
+            } else if (consecutiveLosses === 4) {
+              currentBet = strategy.initialBet * 5;
+            } else {
+              currentBet = strategy.initialBet * 8;
+            }
+          } else if (strategy.type === 'dalembert') {
+            currentBet = currentBet + strategy.initialBet;
+          }
         }
-      }, 2000); // 2 seconds delay for result
-    }, 5000); // New bet every 5 seconds
+        
+        // Check if we need to stop due to consecutive losses
+        if (strategy.maxLosses && consecutiveLosses >= strategy.maxLosses) {
+          this.addLog('error', `Maximum consecutive losses (${strategy.maxLosses}) reached. Stopping bot.`);
+          this.stop();
+        }
+      }, 1500); // Simulate a delay for the wheel to spin
+      
+    }, 5000); // Each round happens every 5 seconds
   }
-
+  
+  /**
+   * Generate a random roulette result
+   */
+  private generateRandomResult(): { number: number; color: string; isEven: boolean } {
+    const number = Math.floor(Math.random() * 37); // 0-36
+    
+    // Determine color based on number
+    let color = "Green"; // Default for 0
+    if (number > 0) {
+      // Red numbers: 1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36
+      if ([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36].includes(number)) {
+        color = "Red";
+      } else {
+        color = "Black";
+      }
+    }
+    
+    return { 
+      number, 
+      color,
+      isEven: number > 0 && number % 2 === 0
+    };
+  }
+  
+  /**
+   * Check if the bet won based on the result and strategy
+   */
+  private checkWin(result: { number: number; color: string; isEven: boolean }, strategy: Strategy): boolean {
+    switch (strategy.betType) {
+      case 'color':
+        return (strategy.targetColor === 'red' && result.color === 'Red') ||
+               (strategy.targetColor === 'black' && result.color === 'Black');
+      
+      case 'evenOdd':
+        return (strategy.targetEvenOdd === 'even' && result.isEven) ||
+               (strategy.targetEvenOdd === 'odd' && !result.isEven && result.number > 0);
+      
+      case 'dozen':
+        if (strategy.targetDozen === 'first') {
+          return result.number >= 1 && result.number <= 12;
+        } else if (strategy.targetDozen === 'second') {
+          return result.number >= 13 && result.number <= 24;
+        } else if (strategy.targetDozen === 'third') {
+          return result.number >= 25 && result.number <= 36;
+        }
+        return false;
+      
+      default:
+        return false;
+    }
+  }
+  
   /**
    * Calculate the next bet amount based on the strategy
    */
   private calculateNextBet(): number {
     if (!this.strategy) return 0;
     
-    // For demo, just return the initial bet
-    // In a real implementation, this would apply the strategy logic
     return this.strategy.initialBet;
+  }
+  
+  /**
+   * Calculate profit based on bet type and amount
+   */
+  private calculateProfit(betAmount: number, betType: string): number {
+    switch (betType) {
+      case 'color':
+      case 'evenOdd':
+        return betAmount; // 1:1 payout
+      
+      case 'dozen':
+        return betAmount * 2; // 2:1 payout
+      
+      default:
+        return betAmount;
+    }
   }
 }
 
-// Export singleton instance
 export const sikulixBot = new SikulixBot();

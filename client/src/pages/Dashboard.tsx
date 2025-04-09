@@ -5,12 +5,13 @@ import StrategySelector from "@/components/dashboard/StrategySelector";
 import AIInsights from "@/components/dashboard/AIInsights";
 import PerformanceChart from "@/components/dashboard/PerformanceChart";
 import GameLog from "@/components/dashboard/GameLog";
-import BotActivityLog from "@/components/dashboard/BotActivityLog";
+import BotActivityMonitor from "@/components/dashboard/BotActivityMonitor";
 import StatusNotification from "@/components/notifications/StatusNotification";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Strategy, BotStatus } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { useWebSocketContext } from "@/components/providers/WebSocketProvider";
 
 export default function Dashboard() {
   const [botStatus, setBotStatus] = useState<BotStatus>({ active: false, strategy: null });
@@ -108,7 +109,7 @@ export default function Dashboard() {
           <div className="lg:col-span-2">
             <PerformanceChart />
             <GameLog />
-            <BotActivityLog />
+            <BotActivityMonitor />
           </div>
         </div>
         

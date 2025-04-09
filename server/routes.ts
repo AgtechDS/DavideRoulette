@@ -4,9 +4,13 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { createInsertSchema } from "drizzle-zod";
 import { sikulixBot } from "./sikulix";
+import { enhancedSikulixConnector } from "./enhancedSikulixConnector";
+import { sikulixManager } from "./sikulixManager";
+import { sikulixImageManager } from "./sikulixImageManager";
 import { botLogSchema, gameResultSchema, strategySchema } from "@shared/schema";
 import OpenAI from "openai";
 import { buttonAutomationService, ButtonConfig } from "./automationService";
+import { WebSocketServer, WebSocket } from 'ws';
 
 // Initialize OpenAI
 const openai = new OpenAI({ 
@@ -15,6 +19,54 @@ const openai = new OpenAI({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+  
+  // Inizializza il WebSocket Server per la comunicazione in tempo reale
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Configura il WebSocket per la comunicazione in tempo reale
+  wss.on('connection', (ws) => {
+    console.log('Client WebSocket connesso');
+    
+    // Invia lo stato iniziale
+    const status = sikulixBot.getStatus();
+    const logs = sikulixBot.getLogs();
+    const gameResults = storage.getAllGameResults();
+    
+    // Gestisci i messaggi in entrata
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Messaggio ricevuto dal client:', data);
+        
+        if (data.type === 'startBot' && data.strategy) {
+          handleBotCommand(data, ws);
+        } else if (data.type === 'stopBot') {
+          sikulixBot.stop().then(() => {
+            sendStatusUpdate(ws);
+          });
+        } else if (data.type === 'request_status') {
+          sendStatusUpdate(ws);
+        } else {
+          console.log('Tipo di messaggio sconosciuto:', data.type);
+        }
+      } catch (error) {
+        console.error('Errore nella gestione del messaggio WebSocket:', error);
+      }
+    });
+    
+    // Invia aggiornamenti di stato quando il bot emette eventi
+    sikulixBot.on('log', (log) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'botLog',
+          data: log
+        }));
+      }
+    });
+  });
+  
+  // Inizializza il modulo SikuliX avanzato
+  await enhancedSikulixConnector.initialize();
 
   // ----- Strategy Endpoints -----
   
@@ -255,27 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Setup event listeners for the bot
-  sikulixBot.on('result', async (result) => {
-    const gameResult = {
-      id: storage.getNextGameResultId(),
-      time: new Date().toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      }),
-      number: result.number,
-      color: result.color,
-      betType: result.betType,
-      betAmount: result.betAmount,
-      outcome: result.outcome,
-      profit: result.outcome === 'Win' ? result.profit : undefined
-    };
-    
-    await storage.addGameResult(gameResult);
-    await storage.updateSession(gameResult);
-  });
+  // Questo evento viene gestito con WebSockets
 
   // ----- Button Automation Endpoints -----
   
@@ -653,6 +685,347 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       sikulixBot.addLog('success', `Automazione pulsante: Risultato vincente dopo ${result.pressCount} pressioni!`);
     }
+  });
+
+  // Configurazione WebSocket per la comunicazione in tempo reale
+  wss.on('connection', (ws) => {
+    console.log('Client WebSocket connesso');
+    
+    // Invia un messaggio di benvenuto
+    ws.send(JSON.stringify({
+      type: 'connect',
+      message: 'Connesso al server Davide Roulette',
+      timestamp: new Date().toISOString()
+    }));
+    
+    // Ascolta per messaggi dal client
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Messaggio ricevuto dal client:', data);
+        
+        // Gestisce i vari tipi di messaggi
+        switch (data.type) {
+          case 'bot_command':
+            handleBotCommand(data, ws);
+            break;
+            
+          case 'request_status':
+            sendStatusUpdate(ws);
+            break;
+            
+          default:
+            console.log('Tipo di messaggio sconosciuto:', data.type);
+            break;
+        }
+      } catch (error) {
+        console.error('Errore nella gestione del messaggio WebSocket:', error);
+      }
+    });
+    
+    // Gestisce la disconnessione
+    ws.on('close', () => {
+      console.log('Client WebSocket disconnesso');
+    });
+    
+    // Invia aggiornamenti periodici sullo stato del bot
+    const statusInterval = setInterval(() => {
+      if (ws.readyState === 1) { // WebSocket.OPEN
+        sendStatusUpdate(ws);
+      } else {
+        clearInterval(statusInterval);
+      }
+    }, 5000);
+  });
+  
+  // Configurazione degli event handler per gli eventi di SikuliX
+  enhancedSikulixConnector.on('bot-started', (data) => {
+    broadcastToClients({
+      type: 'bot_started',
+      data,
+      timestamp: new Date().toISOString()
+    });
+  });
+  
+  enhancedSikulixConnector.on('bot-stopped', (data) => {
+    broadcastToClients({
+      type: 'bot_stopped',
+      data,
+      timestamp: new Date().toISOString()
+    });
+  });
+  
+  enhancedSikulixConnector.on('session-update', (data) => {
+    broadcastToClients({
+      type: 'session_update',
+      data,
+      timestamp: new Date().toISOString()
+    });
+  });
+  
+  enhancedSikulixConnector.on('result', (result) => {
+    broadcastToClients({
+      type: 'game_result',
+      data: result,
+      timestamp: new Date().toISOString()
+    });
+  });
+  
+  enhancedSikulixConnector.on('log', (log) => {
+    broadcastToClients({
+      type: 'bot_log',
+      data: log,
+      timestamp: new Date().toISOString()
+    });
+  });
+  
+  // Funzione per inviare messaggi a tutti i client WebSocket connessi
+  function broadcastToClients(message: any) {
+    wss.clients.forEach((client) => {
+      if (client.readyState === 1) { // WebSocket.OPEN
+        client.send(JSON.stringify(message));
+      }
+    });
+  }
+  
+  // Funzione per gestire i comandi del bot inviati tramite WebSocket
+  async function handleBotCommand(data: any, ws: any) {
+    try {
+      switch (data.command) {
+        case 'start':
+          if (data.strategy) {
+            await enhancedSikulixConnector.startBot(data.strategy);
+            ws.send(JSON.stringify({
+              type: 'command_response',
+              command: 'start',
+              success: true,
+              message: 'Bot avviato correttamente',
+              timestamp: new Date().toISOString()
+            }));
+          } else {
+            ws.send(JSON.stringify({
+              type: 'command_response',
+              command: 'start',
+              success: false,
+              message: 'Strategia non specificata',
+              timestamp: new Date().toISOString()
+            }));
+          }
+          break;
+          
+        case 'stop':
+          await enhancedSikulixConnector.stopAllBots();
+          ws.send(JSON.stringify({
+            type: 'command_response',
+            command: 'stop',
+            success: true,
+            message: 'Bot fermato correttamente',
+            timestamp: new Date().toISOString()
+          }));
+          break;
+          
+        default:
+          ws.send(JSON.stringify({
+            type: 'command_response',
+            command: data.command,
+            success: false,
+            message: 'Comando sconosciuto',
+            timestamp: new Date().toISOString()
+          }));
+          break;
+      }
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      ws.send(JSON.stringify({
+        type: 'command_response',
+        command: data.command,
+        success: false,
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      }));
+    }
+  }
+  
+  // Funzione per inviare un aggiornamento sullo stato del bot
+  function sendStatusUpdate(ws: any) {
+    const status = enhancedSikulixConnector.getBotStatus();
+    
+    ws.send(JSON.stringify({
+      type: 'status_update',
+      data: status,
+      timestamp: new Date().toISOString()
+    }));
+  }
+  
+  // Aggiungi endpoint per la gestione delle risorse di SikuliX
+  
+  // Endpoint per verificare lo stato di installazione di SikuliX
+  app.get("/api/sikulix/status", async (req, res) => {
+    try {
+      const isInstalled = await sikulixManager.checkInstallation();
+      const requirements = await sikulixManager.checkSystemRequirements();
+      
+      res.json({
+        installed: isInstalled,
+        requirements,
+        readyToUse: isInstalled && requirements.java
+      });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ message: errorMessage });
+    }
+  });
+  
+  // Endpoint per installare SikuliX
+  app.post("/api/sikulix/install", async (req, res) => {
+    try {
+      const result = await sikulixManager.installSikuliX();
+      res.json({
+        success: result,
+        message: result ? "SikuliX installato correttamente" : "Errore nell'installazione di SikuliX"
+      });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ message: errorMessage });
+    }
+  });
+  
+  // Endpoint per ottenere l'elenco delle immagini di SikuliX
+  app.get("/api/sikulix/images", (req, res) => {
+    try {
+      const images = sikulixImageManager.getAllImageMetadata();
+      res.json({ images });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ message: errorMessage });
+    }
+  });
+  
+  // Endpoint per avviare il bot con una strategia avanzata
+  app.post("/api/sikulix/start", async (req, res) => {
+    try {
+      const strategy = strategySchema.parse(req.body);
+      
+      // Salva la strategia se è nuova
+      await storage.saveStrategy(strategy);
+      
+      // Avvia il bot avanzato
+      const result = await enhancedSikulixConnector.startBot(strategy);
+      
+      // Inizializza una nuova sessione
+      storage.startNewSession();
+      
+      res.json({ 
+        success: result, 
+        message: "Bot avviato correttamente"
+      });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message: errorMessage });
+    }
+  });
+  
+  // Endpoint per fermare tutti i bot
+  app.post("/api/sikulix/stop", async (req, res) => {
+    try {
+      const result = await enhancedSikulixConnector.stopAllBots();
+      res.json({ 
+        success: result, 
+        message: "Tutti i bot sono stati fermati"
+      });
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(400).json({ message: errorMessage });
+    }
+  });
+  
+  // Endpoint per ottenere lo stato di tutti i bot
+  app.get("/api/sikulix/status/all", (req, res) => {
+    try {
+      const status = enhancedSikulixConnector.getBotStatus();
+      res.json(status);
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ message: errorMessage });
+    }
+  });
+  
+  // Helper functions for WebSocket handling
+  function broadcastToClients(message: any) {
+    wss.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(message));
+      }
+    });
+  }
+
+  async function handleBotCommand(data: any, ws: any) {
+    try {
+      if (data.type === 'startBot' && data.strategy) {
+        const strategy = data.strategy;
+        await storage.saveStrategy(strategy);
+        await sikulixBot.start(strategy);
+        storage.startNewSession();
+        sendStatusUpdate(ws);
+      }
+    } catch (error) {
+      console.error('Errore nell\'esecuzione del comando del bot:', error);
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: error instanceof Error ? error.message : String(error)
+        }));
+      }
+    }
+  }
+
+  function sendStatusUpdate(ws: any) {
+    const status = sikulixBot.getStatus();
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'botStatus',
+        data: {
+          active: status.active,
+          strategy: status.strategy,
+          startTime: status.active ? new Date().toISOString() : null,
+          stats: storage.getCurrentSession()
+        }
+      }));
+    }
+  }
+
+  // Configura eventi globali per la comunicazione tramite WebSocket
+  sikulixBot.on('result', async (result) => {
+    const gameResult = await storage.addGameResult({
+      id: storage.getNextGameResultId(),
+      time: new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      }),
+      number: result.number,
+      color: result.color,
+      betType: result.betType,
+      betAmount: result.betAmount,
+      outcome: result.outcome,
+      profit: result.outcome === 'Win' ? result.profit : undefined
+    });
+    
+    await storage.updateSession(gameResult);
+    
+    // Invia il risultato a tutti i client WebSocket connessi
+    broadcastToClients({
+      type: 'gameResult',
+      data: gameResult
+    });
+    
+    broadcastToClients({
+      type: 'botStatus',
+      data: {
+        active: sikulixBot.getStatus().active,
+        strategy: sikulixBot.getStatus().strategy,
+        startTime: sikulixBot.getStatus().active ? new Date().toISOString() : null,
+        stats: storage.getCurrentSession()
+      }
+    });
   });
 
   return httpServer;

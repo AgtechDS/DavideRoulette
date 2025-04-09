@@ -53,12 +53,17 @@ export const strategySchema = z.object({
   stopLoss: z.number().min(1, "Stop loss must be at least 1"),
   sessionDuration: z.number().min(5, "Session duration must be at least 5 minutes"),
   
+  // Color or even/odd specific options
+  targetColor: z.enum(["red", "black"]).optional(),
+  targetEvenOdd: z.enum(["even", "odd"]).optional(),
+  
   // Advanced settings for Roulette Speed LIVE
   gameMode: z.enum(["standard", "speed_live"]).default("standard").optional(),
   automaticMode: z.boolean().default(false).optional(),
   targetDozen: z.enum(["first", "second", "third"]).optional(),
   entryCondition: z.number().min(1).default(3).optional(),
   maxConsecutiveBets: z.number().min(1).default(17).optional(),
+  maxBets: z.number().min(1).optional(),
   resetStrategy: z.enum(["after_win", "after_loss", "manual"]).default("after_win").optional(),
   
   // Multi-account options
